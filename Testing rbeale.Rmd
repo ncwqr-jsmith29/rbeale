@@ -15,12 +15,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r texting code}
 library(blastula)
 # store credentials to later send our message via smtp (using gmail here but could be others)
-create_smtp_creds_file(
-  file = "gmail_creds",
-  user = "ccosgrov@heidelberg.edu",
-  provider = "gmail"
+  #I think is saved longterm now that it's committed.
+#create_smtp_creds_file(
+#  file = "gmail_creds",
+#  user = "ccosgrov@heidelberg.edu",
+#  provider = "gmail"
   #pass because fuck google: fing skky wach vacn
-)
+#)
 
 sendtext = compose_email("R has stopped")
 sendtext %>%
@@ -37,9 +38,10 @@ sendtext %>%
 3. 
 
 ```{r set up}
+library(dplyr)
 #first create a list of rivers to use.
 ##let's use fewer than all the rivers just to check that things are working..
-input_rivers=c("Beaver")
+input_rivers=c("Honey Creek")
 
 
 ##This is a master list of all the rivers that we have on the HTLP for future reference and less typing later.
@@ -65,9 +67,30 @@ sendtext %>%
 ```
 
 ```{r monthly}
-#the above data should still work, so let's do the things.
+#Calculate how long this code runs, so we can optimize it.
+start.time<-Sys.time()
+
+#run the monthly code
 monthly(parent_directory, input_rivers)
 
+
+##List the end time and calculate run time.
+end.time<-Sys.time()
+end.time-start.time
+#### gc() code to speed up run time ####
+#Raw, original code: Length of run time for beaver creek data with 3 strata and 3 iterations: 2.81 minutes
+#add gc() into the code. New run time: 2.78 minutes
+#Let's add another newer river in, to see. Adding West. Run time w/o gc(): 6.13min
+#With gc(): 6.13, so maybe gc() isn't going to solve all our problems. Good try, though. I want to run it once with Honey Creek just to make sure, though.
+#Honey creek without gc():28.87min
+#Honey Creek with gc(): 28.64 mins
+####Okay. gc() not the move for speeding this up. 
+
+#### next attempt at something ####
+
+
+#### Communications ####
+#send a text that the code is done
 sendtext %>%
   smtp_send(
     to = "2034700303@vtext.com", 

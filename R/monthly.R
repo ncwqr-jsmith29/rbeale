@@ -13,7 +13,9 @@
 #' @examples
 #' monthly()
 
-#Before running, convert data portal excel files to csv
+
+##Before running, convert data portal excel files to csv
+
 monthly <- function(parent_directory, input_rivers){
   print("Starting monthly...")
 
@@ -296,18 +298,18 @@ monthly <- function(parent_directory, input_rivers){
         one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
 
 
-        filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_strata_mses_", yearmo, ".csv", sep = '')
-        write.csv(best_strata_mses, filename, row.names = FALSE)
+        #filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_strata_mses_", yearmo, ".csv", sep = '')
+        #write.csv(best_strata_mses, filename, row.names = FALSE)
 
-        filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individual_mses_", yearmo, ".csv", sep = '')
-        write.csv(best_individual_mses, filename, row.names = FALSE)
+        #filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individual_mses_", yearmo, ".csv", sep = '')
+        #write.csv(best_individual_mses, filename, row.names = FALSE)
 
-        filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_", yearmo, ".csv", sep = '')
-        write.csv(one_individual_mse, filename, row.names = FALSE)
+        #filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_", yearmo, ".csv", sep = '')
+        #write.csv(one_individual_mse, filename, row.names = FALSE)
 
-        filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals_", yearmo, ".csv", sep = '')
-        write.csv(best_individuals, filename, row.names = FALSE)
+        #filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals_", yearmo, ".csv", sep = '')
+        #write.csv(best_individuals, filename, row.names = FALSE)
       }#yearmo
-    }#variable
+      }#variable
   }#river
 }#function
