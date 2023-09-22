@@ -15,26 +15,26 @@ crossover <- function(pop, variable.data){
   n.alleles <- ncol(pop)
   popSize <- nrow(pop)
   parents.indices <- 1:popSize
-  
+
   parent1.indices <- sample(parents.indices, popSize/2)
   parent2.indices <- parents.indices[-parent1.indices]
-  
+
   parent1 <- pop[parent1.indices,]
   colnames(parent1) <- paste("p1", 1:ncol(parent1), sep = ".")
   parent2 <- pop[parent2.indices,]
   colnames(parent2) <- paste("p2", 1:ncol(parent2), sep = ".")
-  
+
   crossover_pts <- sample(allele_indices, nrow(parent1), replace = T)
-  
+
   parents.cross <- suppressMessages(dplyr::bind_cols(parent1, parent2, crossover_pts))
   names(parents.cross)[ncol(parents.cross)] <- "cross"
-  
+
   p1.start.index <- 1
   p1.end.index <- n.alleles
   p2.start.index <- n.alleles+1
   p2.end.index <- 2*n.alleles
   crossover_pt.index <- n.alleles*2+1
-  
+
   create_children <- function(a){
     if(a[1, crossover_pt.index] == 2){
       #children created by crossing end of parents
@@ -54,18 +54,18 @@ crossover <- function(pop, variable.data){
     }
     return(cbind(child1, child2))
   }
-  
+
   children <- as.data.frame(lapply(split(parents.cross, seq(nrow(parents.cross))), create_children))
   children <- as.data.frame(t(children))
-  
+
   #change children columns from lists to vectors
   children <- tidyr::unnest(children, 1:n.alleles)
   colnames(children) <- 1:n.alleles
-  
+
   #count the number of non-na values in each strata for each individual
   non_na_instrata <- as.data.frame(matrix(ncol = (n.alleles - 1)))
   names(non_na_instrata) <- c(1:(n.alleles-1))
-  
+
   find_nonna_strata <- function(a){
     for(j in 1:(n.alleles-1)){
       boundary1 <- a[j] #include left boundary
@@ -78,21 +78,21 @@ crossover <- function(pop, variable.data){
     }
     return(non_na_instrata)
   }
-  
+
   non_na_instrata <- dplyr::bind_rows(apply(children, 1, find_nonna_strata))
-  
+
   #eliminate individuals with strata that don't have at least 3 non-na data point
   problem_strata <- which(non_na_instrata < 3, arr.ind = T)
   problem_children <- unique(problem_strata[,1])
   children <- children[-problem_children,]
-  
+
   #eliminate clones
   children <- dplyr::anti_join(children, pop, by = colnames(children))
-  
+
   #check if there are too many children, even after elimination
   if(nrow(children) > popSize){
     children <- children[1:popSize,]
   }
-  
+
   return(children)
 }

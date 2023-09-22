@@ -17,7 +17,7 @@ fix_monthly_input <- function(monthly_input){
   all_obs_data <- dplyr::rename(all_obs_data, Date = 1, Flow = 2, TSS = 3, TP = 4, SRP = 5, NO23 = 6, TKN = 7, Cl = 8, SO4 = 9, Si = 10, Cond = 11)
   all_obs_data <- dplyr::select(all_obs_data, -Cond)
   all_obs_data <- dplyr::mutate(all_obs_data, Date = as.Date(Date, format = "%m/%d/%Y %H:%M"))
-  
+
   #Gets data prepared. Averages variables if there are multiple observations for a single day and fills in missing dates with NA.
   start.date <- all_obs_data$Date[1]
   start.year <- lubridate::year(start.date)
@@ -30,7 +30,7 @@ fix_monthly_input <- function(monthly_input){
   end.day <- switch(end.mon, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
   end.date <- as.Date(paste(end.year, end.mon, end.day, sep = "-"))
   all.dates <- data.frame(Date = as.Date(seq.Date(start.date, end.date, by = "day")))
-  
+
   all_obs_data <- dplyr::full_join(all_obs_data, all.dates)
   all_obs_data <- dplyr::arrange(all_obs_data, Date)
   all_obs_data <- dplyr::mutate(all_obs_data, YYYYMMDD = as.numeric(gsub("-", "", Date)), .before = Date)
@@ -42,10 +42,10 @@ fix_monthly_input <- function(monthly_input){
   all_obs_data <- dplyr::group_by(all_obs_data, Date)
   all_obs_data <- dplyr::summarise_if(all_obs_data, is.numeric, mean, na.rm = F)
   all_obs_data <- dplyr::mutate(all_obs_data, Flow = Flow * 0.0283168) #convert flow from cfs to cms
-  
+
   all_obs_data$Flow <- zoo::na.approx(all_obs_data$Flow, na.rm = F) #fill missing flow with interpolation, does not fill leading or trailing NAs
-  
+
   all_obs_data <- tidyr::fill(all_obs_data, Flow, .direction = "updown") #fill leading and trailing NAs
-  
+
   return(all_obs_data)
 }
