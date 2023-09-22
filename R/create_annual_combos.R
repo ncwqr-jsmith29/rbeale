@@ -18,7 +18,7 @@ create_annual_combos <- function(k,n,year,variable.data,n.cores){
   }else{
     last.allele <- 366
   }
-  
+
   #doesn't make sense for 2nd allele to be < 4, doesn't make sense for 2nd to last allele to be > last.allele - 3 (362 or 363)
   #make 1000x the necessary number because we will just eliminate problem individuals and keep the extras for when there are problems with children
   if(k == 2){
@@ -32,10 +32,10 @@ create_annual_combos <- function(k,n,year,variable.data,n.cores){
     #"ComboSample" creates strictly increasing combinations and automatically samples from all possible combinations.
     big_combos <- RcppAlgos::comboSample(4:(last.allele-3), m = k-1, n = max_combos, seed = 12345, Parallel = T, nThreads = n.cores - 1)
   }
-  
+
   big_combos <- as.data.frame(cbind(1, big_combos, last.allele))
-  
+
   colnames(big_combos) <- 1:(k+1)
-  
+
   return(big_combos)
 }
