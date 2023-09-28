@@ -32,6 +32,9 @@
 
       n.cores <- parallel::detectCores()
 
+      #set max strata you want to test
+      maxstrata=14
+
       options(warn = -1)
       cl <- parallel::makeCluster(n.cores-1)
       doParallel::registerDoParallel(cl)
@@ -42,7 +45,7 @@
       # flow <- all_obs_data$Flow
       # all_obs_data[,26] <- all_obs_data[,26]/flow/86.4*1000
 
-      #Where s equals number of strata, thus there needs to be one for every strata tested.
+      #Where s equals number of strata, thus there needs to be one for every strata tested to see entire output.
       best_individuals <- data.frame(s1 = numeric(),
                                      s2 = numeric(),
                                      s3 = numeric(),
@@ -74,7 +77,7 @@
             next
           }
 
-          try_strata = seq(1,3)
+          try_strata = seq(1,maxstrata)
 
           best_strata_mses <- data.frame(strata = numeric(),
                                          strata.n = numeric(),
@@ -177,7 +180,7 @@
                 pop_strata_mses <- pop_strata_mses[lowest_individual_indices]
 
                 best_individual <- as.numeric(as.vector(pop[1,]))
-                best_individual <- c(best_individual, rep(NA, 14-strata-1))
+                best_individual <- c(best_individual, rep(NA, maxstrata-strata-1))
                 best_individuals[strata,] <- best_individual
 
                 #best individual mse for this strata
@@ -290,8 +293,8 @@
                 }#iter
 
                 best_individual <- as.numeric(as.vector(pop[1,]))
-                if(strata < 14){
-                  best_individual <- c(best_individual, rep(NA, 14-strata-1))
+                if(strata < maxstrata){
+                  best_individual <- c(best_individual, rep(NA, maxstrata-strata-1))
                 }
                 best_individuals[strata,] <- best_individual
 
