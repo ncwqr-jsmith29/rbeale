@@ -3,40 +3,52 @@
 #' Create a population of individuals (create alleles)
 #' Imports:
 #' RcppAlgos (>= 2.5.3)
-#' @param k Number of strata
-#' @param n Number of individuals
-#' @param yearmo Year-Month of working data
-#' @param variable.data Data of working variable
+#' @param strata Number of strata
+#' @param last.allele Value of the greatest allele (i.e. 31 days in October)
+#' @param n.cores Number of cores in computer, for parallel computing
 #' @keywords create monthly combos combinations
 #' @examples
 #' create_monthly_combos()
 
-create_monthly_combos <- function(k,n,yearmo,variable.data,n.cores){
-  year <- as.numeric(substr(yearmo, 1, 4))
-  mo <- as.numeric(substr(yearmo, 5, 6))
-  if((lubridate::leap_year(year)) && (mo == 2)){
-    last.allele <- 29
-  }else{
-    last.allele <- switch(mo, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+create_monthly_combos <- function(strata, last.allele, n.cores){
+
+  first.allele <- 1
+
+  n = last.allele - 2 #max value of 2nd to last allele is last.allele-2 so last strata has 3 days (remember, the last strata includes both the left and right boundary)
+  r = strata - 1
+  #min value of 2nd allele is 4 (1+3) (remember, all other strata do not include the right boundary)
+  combos <- RcppAlgos::comboGeneral(4:n, r,
+                                    repetition = F,
+                                    Parallel = T,
+                                    nThreads = n.cores - 1)
+  #now, individuals in combos have at least 3 days in first strata and at least 3 in last strata
+
+  diffs <- t(diff(t(combos)))
+
+  if(strata == 3){
+    three_day_problem <- which(diffs < 3)
+    combos <- combos[-three_day_problem,]
   }
-  
-  #doesn't make sense for 2nd allele to be < 4, doesn't make sense for 2nd to last allele to be > last.allele - 3 (362 or 363)
-  #make 1000x the necessary number because we will just eliminate problem individuals and keep the extras for when there are problems with children
-  if(k == 2){
-    big_combos <- 4:(last.allele-3)
-  }else{
-    max_combos <- RcppAlgos::comboCount(4:(last.allele-3), m = k-1)
-    #limit for RcppAlgos package = 2^31-1
-    if(max_combos > n*1000){
-      max_combos <- n*1000
+
+  if(strata > 3){
+    #find individuals whose last strata has fewer than 3 days (remember, the last strata includes both the left and right boundary)
+    last_strata_problem <- which(diffs[,strata-2] < 2)
+    diffs <- diffs[-last_strata_problem,]
+    combos <- combos[-last_strata_problem,]
+    #find individuals whose strata has fewer than 3 days (remember, all other strata do not include right boundary)
+    if(strata == 4){
+      three_day_problem <- which(diffs[,1:(strata - 3)] < 3, arr.ind = T)
+    }else{
+      three_day_problem <- which(diffs[,1:(strata - 3)] < 3, arr.ind = T)[,"row"]
     }
-    #"ComboSample" creates strictly increasing combinations and automatically samples from all possible combinations.
-    big_combos <- RcppAlgos::comboSample(4:(last.allele-3), m = k-1, n = max_combos, seed = 12345, Parallel = T, nThreads = n.cores - 1)
+    three_day_problem <- three_day_problem[!duplicated(three_day_problem)]
+    combos <- combos[-three_day_problem,]
   }
-  
-  big_combos <- as.data.frame(cbind(1, big_combos, last.allele))
-  
-  colnames(big_combos) <- 1:(k+1)
-  
-  return(big_combos)
+
+  #if strata == 2, then no individuals need to be eliminated
+  combos <- cbind(1, combos, last.allele)
+  colnames(combos) <- 1:(strata+1)
+
+  return(combos)
+
 }
