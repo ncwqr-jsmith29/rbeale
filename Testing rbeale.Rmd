@@ -16,11 +16,11 @@ knitr::opts_chunk$set(echo = TRUE)
 library(blastula)
 # store credentials to later send our message via smtp (using gmail here but could be others)
   #I think is saved longterm now that it's committed.
-#create_smtp_creds_file(
-#  file = "gmail_creds",
-#  user = "ccosgrov@heidelberg.edu",
-#  provider = "gmail"
-#)
+create_smtp_creds_file(
+  file = "gmail_creds",
+  user = "ccosgrov@heidelberg.edu",
+  provider = "gmail"
+)
 
 sendtext = compose_email("R has stopped")
 sendtext %>%
@@ -40,7 +40,7 @@ sendtext %>%
 library(dplyr)
 #first create a list of rivers to use.
 ##let's use fewer than all the rivers just to check that things are working..
-input_rivers=c("West")
+input_rivers=c("Beaver")
 
 
 ##This is a master list of all the rivers that we have on the HTLP for future reference and less typing later.
@@ -70,6 +70,7 @@ sendtext %>%
 ```{r monthly}
 #Calculate how long this code runs, so we can optimize it.
 start.time<-Sys.time()
+
 
 #run the monthly code
 monthly(parent_directory, input_rivers)

@@ -31,6 +31,19 @@ fix_monthly_input <- function(monthly_input){
   end.date <- as.Date(paste(end.year, end.mon, end.day, sep = "-"))
   all.dates <- data.frame(Date = as.Date(seq.Date(start.date, end.date, by = "day")))
 
+  ##If there's one NA alone, then we're going to average the sample before and after
+  ##we're doing this across all numeric columns in the dataset to save both time and power.
+  all_obs_data[,3:10] <- lapply(all_obs_data, function(z) {
+    mtx <- cbind(c(NA, head(z, -1)), z, c(tail(z, -1), NA))
+    mtx[is.na(mtx[,2]) & rowSums(is.na(mtx)) > 1,] <- NA
+    out <- ifelse(is.na(mtx[,2]), rowMeans(mtx, na.rm = TRUE), mtx[,2])
+    out[is.nan(out)] <- NA
+    out
+  })
+  ##check the work - hard for large datasets
+  #all_obs_data
+
+
   all_obs_data <- dplyr::full_join(all_obs_data, all.dates)
   all_obs_data <- dplyr::arrange(all_obs_data, Date)
   all_obs_data <- dplyr::mutate(all_obs_data, YYYYMMDD = as.numeric(gsub("-", "", Date)), .before = Date)
