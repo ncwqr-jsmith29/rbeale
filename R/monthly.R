@@ -27,13 +27,14 @@
       data.portal.file <- read.csv(paste(parent_directory, "/", river, "/", river, ".csv", sep = ""))
       all_obs_data <- fix_monthly_input(data.portal.file)
 
+      #Set variables
       variables <- c("TSS", "TP", "SRP", "NO23", "TKN", "Cl", "SO4", "Si")
       yearmos <- unique(all_obs_data$YearMo)
 
       n.cores <- parallel::detectCores()
 
-      #set max strata you want to test
-      maxstrata=14
+      #set max strata you want to test later
+      maxstrata=10
 
       options(warn = -1)
       cl <- parallel::makeCluster(n.cores-1)
@@ -46,6 +47,7 @@
       # all_obs_data[,26] <- all_obs_data[,26]/flow/86.4*1000
 
       #Where s equals number of strata, thus there needs to be one for every strata tested to see entire output.
+      #For monthly, max strata can be up to 10.
       best_individuals <- data.frame(s1 = numeric(),
                                      s2 = numeric(),
                                      s3 = numeric(),
@@ -55,11 +57,7 @@
                                      s7 = numeric(),
                                      s8 = numeric(),
                                      s9 = numeric(),
-                                     s10 = numeric(),
-                                     s11 = numeric(),
-                                     s12 = numeric(),
-                                     s13 = numeric(),
-                                     s14 = numeric())
+                                     s10 = numeric())
 
       for(variable in variables){
 
@@ -70,13 +68,40 @@
 
           obs_data <- dplyr::filter(all_obs_data, YearMo == yearmo)
 
+          ##If there are ALL NAs in a month, write "no data" and then move on to the next month.
           if(all(is.na(obs_data[,variable]))){
-            print(paste("No data for", variable, "in", yearmo, sep = " "))
-            filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_Error_", yearmo, ".txt", sep = '')
-            writeLines(paste("No data for", variable, "in", yearmo, sep = " "), filename)
-            next
-          }
+              print(paste("No data for", variable, "in", yearmo, sep = " "))
+              filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_Error_", yearmo, ".txt", sep = '')
+              writeLines(paste("No data for", variable, "in", yearmo, sep = " "), filename)
+              next
 
+              #if there are no NAs in a month, just run sbeale, print the data and move one
+          }else if(length(!is.na(obs_data[,variable]))){
+
+            strata_mses <- sbeale(obs_data$Flow, obs_data[, variable])
+            strata_mses[7] <- strata_mses[7] * N^2
+            best_strata_mses[1,] <- c(1, 1, strata_mses)
+            best_individual_mses[1,] <- c(1, strata_mses)
+
+            one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
+
+            filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_strata_mses_", yearmo, ".csv", sep = '')
+            write.csv(best_strata_mses, filename, row.names = FALSE)
+
+            filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individual_mses_", yearmo, ".csv", sep = '')
+            write.csv(best_individual_mses, filename, row.names = FALSE)
+
+            filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_", yearmo, ".csv", sep = '')
+            write.csv(one_individual_mse, filename, row.names = FALSE)
+
+            filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals_", yearmo, ".csv", sep = '')
+            write.csv(best_individuals, filename, row.names = FALSE)
+
+            next
+
+          }else{
+
+            ###if there are NAs left, then we'll run some code to see what the most likely concentrations are and run sbeale on that
           try_strata = seq(1,maxstrata)
 
           best_strata_mses <- data.frame(strata = numeric(),
@@ -104,7 +129,7 @@
                                              flowav_m3s = numeric()) #mse.m_lowest_summary #best_summary_mses
 
 
-          N <- length(which(!is.na(obs_data$Flow)))
+            N <- length(which(!is.na(obs_data$Flow)))
 
           for(strata in try_strata){
             print(paste("Processing", strata, "strata for", variable, "...", yearmo, sep = " "))
@@ -323,9 +348,11 @@
 
           filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals_", yearmo, ".csv", sep = '')
           write.csv(best_individuals, filename, row.names = FALSE)
-        }#yearmo
-        gc()
+
+
+            }#run sbeale if no NAs
+          }#yearmo
         }#variable
-    gc()
     }#river
   }#function
+
