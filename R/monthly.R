@@ -49,9 +49,8 @@ monthly <- function(parent_directory, input_rivers){
                                    s7 = numeric(),
                                    s8 = numeric(),
                                    s9 = numeric(),
-                                   s10 = numeric(),
-                                   s11 = numeric(),
-                                   s12 = numeric())
+                                   s10 = numeric())
+
 
     for(variable in variables){
 
@@ -59,6 +58,11 @@ monthly <- function(parent_directory, input_rivers){
 
         year <- as.numeric(substr(yearmo, 1, 4))
         mo <- as.numeric(substr(yearmo, 5, 6))
+        if((lubridate::leap_year(year)) && (mo == 2)){
+          last.allele <- 29
+        }else{
+          last.allele <- switch(mo, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+        }
 
         obs_data <- dplyr::filter(all_obs_data, YearMo == yearmo)
 
@@ -67,9 +71,25 @@ monthly <- function(parent_directory, input_rivers){
           filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_Error_", yearmo, ".txt", sep = '')
           writeLines(paste("No data for", variable, "in", yearmo, sep = " "), filename)
           next
+        }else{
+          if(sum(!is.na(obs_data[,variable])) < 3){
+            print(paste("Not enough data for", variable, "in", yearmo, sep = " "))
+            filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_Error_", yearmo, ".txt", sep = '')
+            writeLines(paste("No data for", variable, "in", yearmo, sep = " "), filename)
+            next
+          }
         }
 
-        try_strata = seq(1,14)
+        if(length(!is.na(obs_data[,variable]))){
+          strata_mses <- sbeale(obs_data$Flow, obs_data[, variable])
+          strata_mses[7] <- strata_mses[7] * N^2
+          best_strata_mses[1,] <- c(1, 1, strata_mses)
+          best_individual_mses[1,] <- c(1, strata_mses)
+        }else{
+
+        #max number of strata is determined by how many groups of 3 can be contained in the total number of days in the individual
+        max_strata <- last.allele %/% 3
+        try_strata = seq(1,max_strata)
 
         best_strata_mses <- data.frame(strata = numeric(),
                                        strata.n = numeric(),
@@ -102,205 +122,84 @@ monthly <- function(parent_directory, input_rivers){
           print(paste("Processing", strata, "strata for", variable, "...", yearmo, sep = " "))
           if(strata == 1){
             popSize <- 1
-            pop <- c(1,365)
+            pop <- c(1,last.allele)
             strata_mses <- sbeale(obs_data$Flow, obs_data[, variable])
             strata_mses[7] <- strata_mses[7] * N^2
             best_strata_mses[1,] <- c(1, 1, strata_mses)
             best_individual_mses[1,] <- c(1, strata_mses)
-          }else{
-            if(strata == 2){
-              if((lubridate::leap_year(year)) && (mo == 2)){
-                last.allele <- 29
-              }else{
-                last.allele <- switch(mo, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-              }
+          }else{#if strata >= 2
 
-              #There must be at least 3 days in each strata and the right boundary is not included (except in the last strata),
-              #so with 31 days, there are 26 possibilities (31 days - 3 days at the beginning - 2 days at the end = 26)
-              popSize <- switch(as.character(last.allele), "31" = 26, "30" = 25, "29" = 24, "28" = 23)
+            big_combos = create_monthly_combos(strata, last.allele, n.cores)
 
-              variable.data <- dplyr::pull(obs_data, variable)
+            variable.data <- dplyr::pull(obs_data, variable)
+            problem_individuals <- logical()
+            parallel::clusterExport(cl, list("find_problem_individuals", "problem_individuals", "variable.data", "strata"), envir = environment())
+            problem_individuals <- parallel::parRapply(cl, big_combos, find_problem_individuals)
+            #eliminate problem individuals
+            big_combos <- big_combos[!problem_individuals,]
 
-              big_combos = create_monthly_combos(strata, popSize, yearmo, variable.data)
+            if(class(big_combos) == "numeric"){
+              #this means there is 1 individual, so the matrix is a vector
+              #force it to be a matrix
+              big_combos <- matrix(big_combos, nrow = 1)
+            }
 
-              problem_individuals <- logical()
-              parallel::clusterExport(cl, list("find_problem_individuals", "problem_individuals", "variable.data", "strata"), envir = environment())
-              problem_individuals <- parallel::parRapply(cl, big_combos, find_problem_individuals)
-              #eliminate problem individuals
-              big_combos <- big_combos[!problem_individuals,]
+            popSize <- nrow(big_combos)
 
-              if(nrow(big_combos) < popSize){
-                if (nrow(big_combos) %% 2 == 0){
-                  popSize <- nrow(big_combos)
-                }else{
-                  popSize <- nrow(big_combos) - 1
-                }
-                print(paste("New popSize = ", popSize, sep = ""))
-              }
+            #if there are no good individuals with 2 strata, then there won't be any for 3 or more,
+            #so break out of strata for-loop and move on to next variable
+            if(popSize == 0){
+              print(paste("Not enough data for ", strata, " strata", sep = ""))
+              break
+            }
 
-              if(popSize == 0){
-                break #breaks out of strata for-loop, which moves on to next variable
-              }
+            pop = big_combos
 
-              pop = big_combos
-
-              strata_mses <- data.frame(dload.bi_kgd = numeric(),
-                                        dload.ub_kgd = numeric(),
-                                        tload_kglenS = numeric(),
-                                        degf = numeric(),
-                                        lenObs = numeric(),
-                                        lenStr = numeric(),
-                                        MSE_kglenS = numeric(),
-                                        Cl_kglenS = numeric(),
-                                        flowmu_m3s = numeric(),
-                                        flowav_m3s = numeric())
-              pop_strata_mses <- vector(mode = "list", length = popSize)
-              names(pop_strata_mses) <- 1:popSize
+            strata_mses <- data.frame(dload.bi_kgd = numeric(),
+                                      dload.ub_kgd = numeric(),
+                                      tload_kglenS = numeric(),
+                                      degf = numeric(),
+                                      lenObs = numeric(),
+                                      lenStr = numeric(),
+                                      MSE_kglenS = numeric(),
+                                      Cl_kglenS = numeric(),
+                                      flowmu_m3s = numeric(),
+                                      flowav_m3s = numeric())
+            pop_strata_mses <- vector(mode = "list", length = popSize)
+            names(pop_strata_mses) <- 1:popSize
 
 
-              pop_strata_mses <- apply(pop, 1, calc_strata_mses, strata = strata, obs_data = obs_data, variable = variable, strata_mses = strata_mses)
+            pop_strata_mses <- apply(pop, 1, calc_strata_mses, strata = strata, obs_data = obs_data, variable = variable, strata_mses = strata_mses)
 
 
-              individual_mses <- do.call(rbind.data.frame, lapply(pop_strata_mses, calc_individual_mse, N))
-              names(individual_mses) <- report_vars
-              individual_mses <- dplyr::mutate(individual_mses, index = 1:nrow(individual_mses), .before = 1)
+            individual_mses <- do.call(rbind.data.frame, lapply(pop_strata_mses, calc_individual_mse, N))
+            names(individual_mses) <- report_vars
+            individual_mses <- dplyr::mutate(individual_mses, index = 1:nrow(individual_mses), .before = 1)
 
-              lowest_individual_mses <- dplyr::arrange(individual_mses, MSE_kglenS)
-              lowest_individual_indices <- dplyr::pull(lowest_individual_mses, index)
+            lowest_individual_mses <- dplyr::arrange(individual_mses, MSE_kglenS)
+            lowest_individual_indices <- dplyr::pull(lowest_individual_mses, index)
 
-              lowest_individual_mses <- dplyr::select(lowest_individual_mses, -index)
+            lowest_individual_mses <- dplyr::select(lowest_individual_mses, -index)
 
+            if(nrow(pop) != 1){
               pop <- pop[lowest_individual_indices,]
-              pop_strata_mses <- pop_strata_mses[lowest_individual_indices]
+            }
+            pop_strata_mses <- pop_strata_mses[lowest_individual_indices]
 
-              best_individual <- as.numeric(as.vector(pop[1,]))
-              best_individual <- c(best_individual, rep(NA, 12-strata-1))
-              best_individuals[strata,] <- best_individual
+            best_individual <- as.numeric(as.vector(pop[1,]))
+            best_individual <- c(best_individual, rep(NA, 12-strata-1))
+            best_individuals[strata,] <- best_individual
 
-              #best individual mse for this strata
-              best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
-              #best strata mses for this strata
-              add.rows <- cbind(rep(strata, strata), 1:strata, pop_strata_mses[[1]])
-              names(add.rows)[1:2] <- c("strata", "strata.n")
-              best_strata_mses <- dplyr::bind_rows(best_strata_mses, add.rows)
+            #best individual mse for this strata
+            best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
+            #best strata mses for this strata
+            add.rows <- cbind(rep(strata, strata), 1:strata, pop_strata_mses[[1]])
+            names(add.rows)[1:2] <- c("strata", "strata.n")
+            best_strata_mses <- dplyr::bind_rows(best_strata_mses, add.rows)
 
-            }else{ #if strata > 2
-              if(strata == 3){
-                popSize = 300
-              }else{
-                popSize = 1500
-              }
-
-              variable.data <- dplyr::pull(obs_data, variable)
-
-              big_combos = create_monthly_combos(strata, popSize, yearmo, variable.data, n.cores)
-
-              problem_individuals <- logical()
-              parallel::clusterExport(cl, list("find_problem_individuals", "problem_individuals", "variable.data", "strata"), envir = environment())
-              problem_individuals <- parallel::parRapply(cl, big_combos, find_problem_individuals)
-              #eliminate problem individuals
-              big_combos <- big_combos[!problem_individuals,]
-
-              if(nrow(big_combos) < popSize){
-                if (nrow(big_combos) %% 2 == 0){
-                  popSize <- nrow(big_combos)
-                }else{
-                  popSize <- nrow(big_combos) - 1
-                }
-                print(paste("New popSize = ", popSize, sep = ""))
-              }
-
-              if(popSize == 0){
-                break #breaks out of strata for-loop, which moves on to next variable
-              }
-
-              pop = big_combos[1:popSize,]
-              big_combos = big_combos[-(1:popSize),]
-
-              iter = 35
-              stopIter <- F
-
-              for(i in seq(1,iter)){
-                print(paste("Iter = ", i, sep = ""))
-                if(i == 1){
-                  strata_mses <- data.frame(dload.bi_kgd = numeric(),
-                                            dload.ub_kgd = numeric(),
-                                            tload_kglenS = numeric(),
-                                            degf = numeric(),
-                                            lenObs = numeric(),
-                                            lenStr = numeric(),
-                                            MSE_kglenS = numeric(),
-                                            Cl_kglenS = numeric(),
-                                            flowmu_m3s = numeric(),
-                                            flowav_m3s = numeric())
-                  pop_strata_mses <- vector(mode = "list", length = popSize)
-                  names(pop_strata_mses) <- 1:popSize
-
-                  parallel::clusterExport(cl, list("calc_strata_mses", "obs_data", "strata_mses", "strata", "sbeale", "variable"), envir = environment())
-                  pop_strata_mses <- parallel::parRapply(cl, pop, calc_strata_mses, strata = strata, obs_data = obs_data, variable = variable, strata_mses = strata_mses)
-
-                }else{
-                  pop_strata_mses <- old_strata_mses
-                }
-
-                children = crossover(pop, variable.data)
-                #check if children need to be supplemented by additional individuals from big_combos
-                if(nrow(children) < popSize){
-                  extras.needed <- popSize - nrow(children)
-                  if(nrow(big_combos) < extras.needed){
-                    #stop("big_combos < extras.needed")
-                    print("big_combos < extras.needed, stopping iter")
-                    stopIter <- T
-                    children <- rbind(children, big_combos)
-                    children = crossover(pop, dplyr::pull(obs_data, variable)) #do another crossover to ensure that added children are valid and are not clones
-                  }else{
-                    children <- rbind(children, head(big_combos, extras.needed))
-                    big_combos <- big_combos[-(1:extras.needed),]
-                  }
-                }
-                parallel::clusterExport(cl, list("calc_strata_mses", "obs_data", "strata_mses", "strata", "sbeale", "variable"), envir = environment())
-                child_strata_mses <- parallel::parRapply(cl, children, calc_strata_mses, strata = strata, obs_data = obs_data, variable = variable, strata_mses = strata_mses)
-                bigger_pop_strata_mses = append(pop_strata_mses, child_strata_mses)
-
-
-                individual_mses <- do.call(rbind.data.frame, lapply(bigger_pop_strata_mses, calc_individual_mse, N))
-                names(individual_mses) <- report_vars
-                individual_mses <- dplyr::mutate(individual_mses, index = 1:nrow(individual_mses), .before = 1)
-
-                bigger_pop <- as.data.frame(rbind(pop, children))
-
-                lowest_individual_mses <- dplyr::slice_head(dplyr::arrange(individual_mses, MSE_kglenS), n = popSize)
-                lowest_individual_indices <- dplyr::pull(lowest_individual_mses, index)
-
-                lowest_individual_mses <- dplyr::select(lowest_individual_mses, -index)
-
-                #make new pop from lowest mses
-                pop <- bigger_pop[lowest_individual_indices,]
-
-                old_strata_mses <- bigger_pop_strata_mses[lowest_individual_indices]
-
-                if(stopIter == T){
-                  break
-                }
-
-              }#iter
-
-              best_individual <- as.numeric(as.vector(pop[1,]))
-              if(strata < 12){
-                best_individual <- c(best_individual, rep(NA, 12-strata-1))
-              }
-              best_individuals[strata,] <- best_individual
-
-              #best individual mse for this strata
-              best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
-
-              #best strata mses for this strata
-              add.rows <- cbind(rep(strata, strata), 1:strata, old_strata_mses[[1]])
-              names(add.rows)[1:2] <- c("strata", "strata.n")
-              best_strata_mses <- dplyr::bind_rows(best_strata_mses, add.rows)
-            }#end else
-          }#strata
-        }
+          }#end else
+        }#strata
+      }#sbeale
 
         one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
 
@@ -316,6 +215,7 @@ monthly <- function(parent_directory, input_rivers){
 
         filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals_", yearmo, ".csv", sep = '')
         write.csv(best_individuals, filename, row.names = FALSE)
+
       }#yearmo
     }#variable
   }#river
