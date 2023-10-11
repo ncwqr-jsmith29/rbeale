@@ -33,18 +33,6 @@ fix_spring_input <- function(spring_input){
   }
   all.dates <- data.frame(Date = as.Date(seq.Date(start.date, end.date, by = "day")))
 
-  ##If there's one NA alone, then we're going to average the sample before and after
-  ##we're doing this across all numeric columns in the dataset to save both time and power.
-  all_obs_data[,3:10] <- lapply(all_obs_data, function(z) {
-    mtx <- cbind(c(NA, head(z, -1)), z, c(tail(z, -1), NA))
-    mtx[is.na(mtx[,2]) & rowSums(is.na(mtx)) > 1,] <- NA
-    out <- ifelse(is.na(mtx[,2]), rowMeans(mtx, na.rm = TRUE), mtx[,2])
-    out[is.nan(out)] <- NA
-    out
-  })
-  ##check the work - hard for large datasets
-  #all_obs_data
-
 
   all_obs_data <- dplyr::full_join(all_obs_data, all.dates)
   all_obs_data <- dplyr::arrange(all_obs_data, Date)
@@ -61,6 +49,19 @@ fix_spring_input <- function(spring_input){
   all_obs_data$Flow <- zoo::na.approx(all_obs_data$Flow, na.rm = F) #fill missing flow with interpolation, does not fill leading or trailing NAs
 
   all_obs_data <- tidyr::fill(all_obs_data, Flow, .direction = "updown") #fill leading and trailing NAs
+
+  ##If there's one NA alone, then we're going to average the sample before and after
+  ##we're doing this across all numeric columns in the dataset to save both time and power.
+  all_obs_data[,3:10] <- lapply(all_obs_data, function(z) {
+    mtx <- cbind(c(NA, head(z, -1)), z, c(tail(z, -1), NA))
+    mtx[is.na(mtx[,2]) & rowSums(is.na(mtx)) > 1,] <- NA
+    out <- ifelse(is.na(mtx[,2]), rowMeans(mtx, na.rm = TRUE), mtx[,2])
+    out[is.nan(out)] <- NA
+    out
+  })
+  ##check the work - hard for large datasets
+  #all_obs_data
+
 
   return(all_obs_data)
 }

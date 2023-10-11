@@ -100,6 +100,15 @@ spring <- function(parent_directory, input_rivers){
 
         N <- length(which(!is.na(obs_data$Flow)))
 
+        if(all(!is.na(obs_data[,variable]))){
+          strata_mses <- sbeale(obs_data$Flow, obs_data[, variable])
+          strata_mses[7] <- strata_mses[7] * N^2
+          best_strata_mses[1,] <- c(1, 1, strata_mses)
+          best_individual_mses[1,] <- c(1, strata_mses)
+
+          print(paste("Running sbeale for", variable, "...", year, sep = " "))
+        }else{
+
         for(strata in try_strata){
           print(paste("Processing", strata, "strata for", variable, "...", year, sep = " "))
           if(strata == 1){
@@ -290,6 +299,8 @@ spring <- function(parent_directory, input_rivers){
             }#end else
           }#strata
         }
+        }#end else
+
 
         one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
 
