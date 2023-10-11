@@ -80,12 +80,7 @@ monthly <- function(parent_directory, input_rivers){
           }
         }
 
-        if(length(!is.na(obs_data[,variable]))){
-          strata_mses <- sbeale(obs_data$Flow, obs_data[, variable])
-          strata_mses[7] <- strata_mses[7] * N^2
-          best_strata_mses[1,] <- c(1, 1, strata_mses)
-          best_individual_mses[1,] <- c(1, strata_mses)
-        }else{
+
 
         #max number of strata is determined by how many groups of 3 can be contained in the total number of days in the individual
         max_strata <- last.allele %/% 3
@@ -199,7 +194,6 @@ monthly <- function(parent_directory, input_rivers){
 
           }#end else
         }#strata
-      }#sbeale
 
         one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
 
