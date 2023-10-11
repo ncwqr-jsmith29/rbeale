@@ -66,6 +66,7 @@ monthly <- function(parent_directory, input_rivers){
 
         obs_data <- dplyr::filter(all_obs_data, YearMo == yearmo)
 
+
         if(all(is.na(obs_data[,variable]))){
           print(paste("No data for", variable, "in", yearmo, sep = " "))
           filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_Error_", yearmo, ".txt", sep = '')
@@ -75,12 +76,10 @@ monthly <- function(parent_directory, input_rivers){
           if(sum(!is.na(obs_data[,variable])) < 3){
             print(paste("Not enough data for", variable, "in", yearmo, sep = " "))
             filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_Error_", yearmo, ".txt", sep = '')
-            writeLines(paste("No data for", variable, "in", yearmo, sep = " "), filename)
+            writeLines(paste("Not enough data for", variable, "in", yearmo, sep = " "), filename)
             next
           }
         }
-
-
 
         #max number of strata is determined by how many groups of 3 can be contained in the total number of days in the individual
         max_strata <- last.allele %/% 3
@@ -113,6 +112,15 @@ monthly <- function(parent_directory, input_rivers){
 
         N <- length(which(!is.na(obs_data$Flow)))
 
+        if(all(!is.na(obs_data[,variable]))){
+          strata_mses <- sbeale(obs_data$Flow, obs_data[, variable])
+          strata_mses[7] <- strata_mses[7] * N^2
+          best_strata_mses[1,] <- c(1, 1, strata_mses)
+          best_individual_mses[1,] <- c(1, strata_mses)
+
+          print(paste("Running sbeale for", variable, "...", yearmo, sep = " "))
+        }else{
+
         for(strata in try_strata){
           print(paste("Processing", strata, "strata for", variable, "...", yearmo, sep = " "))
           if(strata == 1){
@@ -133,7 +141,8 @@ monthly <- function(parent_directory, input_rivers){
             #eliminate problem individuals
             big_combos <- big_combos[!problem_individuals,]
 
-            if(class(big_combos) == "numeric"){
+
+            if(class(big_combos)[1] == "numeric"){
               #this means there is 1 individual, so the matrix is a vector
               #force it to be a matrix
               big_combos <- matrix(big_combos, nrow = 1)
@@ -194,6 +203,7 @@ monthly <- function(parent_directory, input_rivers){
 
           }#end else
         }#strata
+        }#sbeale
 
         one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
 
