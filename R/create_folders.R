@@ -23,7 +23,7 @@ create_folders <- function(parent_directory, input_rivers, variables = "ALL", in
   setwd(input_directory)
 
   for(river in input_rivers){
-    for(variable in varialbes){
+    for(variable in variables){
       dir.create(paste(parent_directory, river, "Output", "Annual", variable, sep = "/"))
     }
     file.copy(from = input_files, to = paste(parent_directory, river, sep = "/"))
