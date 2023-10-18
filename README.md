@@ -11,7 +11,7 @@ library(rbeale)
 
 ## To Calculate Loads...
 ### 1. Prepare input files
-This package was originally built to work with files downloaded from the [NCWQR data portal](https://ncwqr-data.org/HTLP/Portal). If you use downloads from the data portal, then you only need to separate the data into separate CSV files for each river.
+This package was originally built to work with files downloaded from the [NCWQR Data Portal](https://ncwqr-data.org/HTLP/Portal). If you use downloads from the data portal, then you only need to separate the data into separate CSV files for each river.
 
 If you are using your own data, then use the RiverSample.csv file as a template.
 
@@ -39,19 +39,20 @@ Where...
 
 
 # Conceptual Documentation
-Keywords:
-
-Timeframe/Load Timeframe - Annual, spring, monthly, or daily
-
-Variables/Nutrient Variables - TSS, TP, SRP, NO23, TKN, Cl, SO4, Si
-
-Strata - A subset of the dataset of interest (e.g., TP values for Maumee in 2013)
-
-Allele - An integer representing the index of the beginning or end of a strata
-
-Individual - A vector of alleles
-
-Population - A matrix of individuals
+> [!IMPORTANT]
+> Keywords:
+>
+> Timeframe/Load Timeframe - Annual, spring, monthly, or daily
+>
+> Variables/Nutrient Variables - TSS, TP, SRP, NO23, TKN, Cl, SO4, Si
+>
+> Strata - A subset of the dataset of interest (e.g., TP values for Maumee in 2013)
+>
+> Allele - An integer representing the index of the beginning or end of a strata
+>
+> Individual - A vector of alleles
+>
+> Population - A matrix of individuals
 
 NCWQR scientist, R. Peter Richards, wrote FORTRAN code to calculate nutrient loads using the Beale Ratio Estimator. That code was translated to R in 2016 by NCWQR scientist, Rem Confesor. That translation is what is contained in the `sbeale()` function of this package. The `sbeale()` function calculates the load for a given timeframe, using all available data for that timeframe; any missing data is ignored.
 
@@ -71,25 +72,35 @@ If there are two or more days in a row of missing data, then further steps must 
 The approach of this code is to fill in missing data by breaking the dataset into strata (chunks of data) and calculate an overall load for that strata. The goal is to set up the strata to where the data within each strata is as similar as possible. Any missing data in that strata is then "filled in" with the load calculated for that strata. The load for the entire timeframe is calculated by taking a sum of the load calculations for each strata.
 
 ### Genetic Algorithm & MSE
-As a demonstration, let's say we want to break the TP data for Maumee in 2013 into 4 strata. How do we determine where one strata ends and another begins? Do do this we use a genetic algorithm.
+As a demonstration, let's say we want to break the TP data for Maumee in 2013 into 4 strata.
 
-Let's define some keywords, as they relate to the code:
-
-How many different ways are there to break the data into 4 strata? Here's the relevant information and rules the code follows:
+How many different ways are there to break the data into 4 strata? Here are the rules the code follows:
 
 1. The first strata must start with 1 (1 is the first allele for all individuals).
-2. The last strata must end with 365 (365 is the last allele for all individuals).
+2. The last strata must end with 365 (365 is the last allele for all individuals, unless it's a leap year).
 3. There must be at least 3 non-NA data points within each strata.
 4. Strata include the left allele, but not the right. The only exception is the last strata.
+5. Individuals must be strictly increasing.
 
 These rules mean that each individual has the following setup:
 
 1__________x__________y__________z__________365
 
-[!NOTE]
-Notice that for 4 strata, there are 5 alleles. For n strata there are n+1 alleles. According to rule 4, the strata would be 1 thru x-1, x thru y-1, y thru z-1, and z thru 365.
+> [!NOTE]
+> Notice that for 4 strata, there are 5 alleles. For n strata there are n+1 alleles. According to rule 4, the strata would be 1 thru x-1, x thru y-1, y thru z-1, and z thru 365.
 
 Following these rules, there are <sub>359</sub>C<sub>3</sub> possible individuals.
+> x >= 4 (Rules 1 and 3)
+> 
+> z <= 363 (Rules 2, 3, and 4)
+> 
+> max(z-x) = 359
+> 
+> count(x,y,z) = 3
+> 
+> We use a combination and not a permutation because of Rule 5. An individual with alleles 1, 5, 256, 113, 365 is the same as 1, 5, 113, 256, 365 because the first individual would be sorted to become the second.
+
+
 
 # Flowchart
 ![Flow chart of rbeale code](https://github.com/ncwqr-jsmith29/rbeale/blob/master/rbeale.png)
