@@ -1,58 +1,57 @@
 # rbeale
-Welcome to the rbeale package! This package was built by team members at the National Center for Water Quality Research (NCWQR) in Tiffin, OH. The purpose of the rbeale package is to make it easy for reserachers to calculate nutrient loading in R, using a Beale Ratio Estimator.
+Welcome to the rbeale package! This package was built by team members at the National Center for Water Quality Research (NCWQR) in Tiffin, OH. The purpose of the rbeale package is to make it easy for reserachers to calculate nutrient loads in R, using a Beale Ratio Estimator.
 
-## To Run This Package...
-Install the package:
+# Install
 ```
 library(devtools)
 install_github("ncwqr-jsmith29/rbeale")
 library(rbeale)
 ```
 
-## To Calculate Loads...
-### 1. Prepare input files
+# How to use the package
+## 1. Prepare input files
 This package was originally built to work with files downloaded from the [NCWQR Data Portal](https://ncwqr-data.org/HTLP/Portal). If you use downloads from the data portal, then you only need to separate the data into separate CSV files for each river.
 
 If you are using your own data, then use the RiverSample.csv file as a template.
 
 We recommend changing the names of your input files to the name of the river (i.e. Maumee.csv).
 
-### 2. Put all input files in a single directory
+## 2. Put all input files in a single directory
 Make sure you put all input files in a single folder; it doesn't matter where.
 
-### 3. Run `create_folders()`
+## 3. Run `create_folders()`
 To create all folders needed for running subsequent functions, run the code below:
 ```
 create_folders(parent_directory, input_rivers, variables = "ALL", input_directory, input_files)
 ```
-Where...
-`parent_directory` = The directory where you would like all output folders and input files to go. This becomes your working directory in subsequent functions.
+>parent_directory = The directory where you would like all output folders and input files to go. This becomes your working directory in subsequent functions.
+>
+>input_rivers = The names of the rivers you would like to calculate loads for. This should either be a single string or a vector of strings. These names should match the file names of the input_files.
+>
+>variables = The "ALL" option will calculate loads for TSS, TP, SRP, NO23, TKN, Cl, SO4, and Si. Otherwise, a single string or vector of strings as a subset of the listed variables.
+>
+>input_directory = The directory where all the input files are.
+>
+>input_files = String or vector of strings containing the input file names. These names should match the names of the input_rivers.
 
-`input_rivers` = The names of the rivers you would like to calculate loads for. This should either be a single string or a vector of strings. These names should match the file names of the input_files.
-
-`variables` = The "ALL" option will calculate loads for TSS, TP, SRP, NO23, TKN, Cl, SO4, and Si
-
-`input_directory` = The directory where all the input files are.
-
-`input_files` = String or vector of strings containing the input file names. These names should match the names of the input_rivers.
 ### 4. Run `annual()`, `spring()`, `monthly()`, or `daily()`
-
+These functions call the rest of the functions, as needed. There is no need to run any other functions but `create_folders()`, `annual()`, `spring()`, `monthly()`, and `daily()`.
 
 # Conceptual Documentation
 > [!IMPORTANT]
 > Keywords:
 >
-> Timeframe/Load Timeframe - Annual, spring, monthly, or daily
+> Timeframe/Load Timeframe - Annual, spring (March - July), monthly, or daily
 >
 > Variables/Nutrient Variables - TSS, TP, SRP, NO23, TKN, Cl, SO4, Si
 >
-> Strata - A subset of the dataset of interest (e.g., TP values for Maumee in 2013)
+> Strata - A subset of the dataset of interest (e.g., TP values for Maumee in 2013) (n strata)
 >
-> Allele - An integer representing the index of the beginning or end of a strata
+> Allele - An integer representing the index of the beginning or end of a strata (if there are n strata, there are n+1 alleles)
 >
 > Individual - A vector of alleles
 >
-> Population - A matrix of individuals
+> Population - A matrix of individuals, where each row is a single individual
 
 ## Origins
 NCWQR scientist, R. Peter Richards, wrote FORTRAN code to calculate nutrient loads using the Beale Ratio Estimator. That code was translated to R in 2016 by NCWQR scientist, Rem Confesor. That translation is what is contained in the `sbeale()` function of this package. The `sbeale()` function calculates the load for a given timeframe, using all available data for that timeframe; any missing data is ignored.
@@ -72,7 +71,7 @@ If there are lone NAs (or single days of missing data, surrounded by a day of no
 #### Scenario 3: Strings of days of missing data
 If there are two or more days in a row of missing data, then we must move on to Step 2.
 
-The approach of this code is to fill in missing data by breaking the dataset into strata (chunks of data) and calculate an overall load for that strata. The goal is to set up the strata to where the data within each strata is as similar as possible. Any missing data in that strata is then "filled in" with the load calculated for that strata. The load for the entire timeframe is calculated by taking a sum of the load calculations for each strata.
+The approach of this code is to fill in missing data by breaking the dataset into strata (chunks of data) and calculate an overall load for that strata. The goal is to set up the strata to where the data within each strata is as similar as possible. Any missing data in that strata is then "filled in" with the load calculated for that strata. The load for the entire timeframe is calculated by taking a sum of the load for each strata.
 
 ### Step 2: Create Population
 As a demonstration, let's say we want to break the TP data for Maumee in 2013 into 4 strata.
@@ -109,15 +108,15 @@ We create a population of individuals with the set-up above. There are far too m
 Once we have a population of individuals that follow the rules above, we must calculate the load for each strata. To determine how well the calculated load represents the data within each strata, we calculate a mean square error (MSE). Both the load and the MSE of each strata is calculated by calling the `sbeale()` function inside the `calc_strata_mses()` function. Once we have calculated the MSEs for each strata in each individual, we start to enter into the genetic part of the code.
 
 ### Step 4: Crossover (Breeding)
-The population of individuals is sent to the `crossover()` code so the individuals can "breed." Using our genetic language, two individuals pair up and swap their alleles to create 2 - 4 new individuals, or "children." Here's an example:
+The population of individuals is sent to the `crossover()` code so the individuals can "breed." Using our genetic language, two individuals pair up and swap their alleles to create 2 or 4 new individuals, or "children." Here's an example:
 
 Individual 1 (Parent 1): 1_____50_____117_____260_____365
 
 Individual 2 (Parent 2): 1_____103_____256_____302_____365
 
-We then choose a random "change point." The changepoint cannot be the first or last allele, as this would make no new individuals. Our options are:
+We choose a random "change point." The changepoint cannot be the first or last allele, as this would make no new individuals. Our options are:
 
-1. Change point == Allele #2
+1. Change point = Allele #2
    
    Children are created by crossing alleles after the change point.
    
@@ -125,7 +124,7 @@ We then choose a random "change point." The changepoint cannot be the first or l
    
    Child 2: 1_____**103**_____117_____260_____365
    
-2. Changepoint == Allele #4 (or, in the general case, allele n-1)
+2. Changepoint = Allele #4 (or, in the general case, allele k-1)
 
    Children are created by crossing alleles before the change point.
 
@@ -133,7 +132,7 @@ We then choose a random "change point." The changepoint cannot be the first or l
 
    Child 2: 1_____50_____117_____**302**_____365
 
-3. Changepoint == Allele #3 (or, in the general case, any allele that is not 2 or n-1)
+3. Changepoint = Allele #3 (or, in the general case, any allele that is not 2 or k-1)
 
    Children are created by crossing both the alleles before the change point and the alleles after.
 
@@ -148,7 +147,7 @@ We then choose a random "change point." The changepoint cannot be the first or l
 >[!NOTE]
 >Notice that the change points don't actually change position; it's the alleles before or after the change point that change positions.
 
-Some of the children created by `crossover()` may not follow the rules for individuals listed above. If the children aren't strictly increasing, then they are sorted. If the children don't contain at least 3 non-NA values, then they are eliminated. If the children are clones of any other individuals (other children or any parents), then they are eliminated. The remaining children become part of the overall population.
+Some of the children created by `crossover()` may not follow the rules for individuals listed above. If the children aren't strictly increasing (Rule 5), then they are sorted. If the children don't contain at least 3 non-NA values (Rule 3), then they are eliminated. If the children are clones of any other individuals (other children or any parents), then they are eliminated. The remaining children become part of the overall population.
 
 We can then check to see if any new strata are present in each individual. If so, then we calculate the laod and MSE for those strata using `calc_strata_mses()`.
 
@@ -162,7 +161,7 @@ When we have individual MSEs, we use those to compare individuals to each other 
 After the population is left with the best individuals, we begin the process again with another crossover (Step 4). We repeat this process a maximum of 35 times.
 
 ### Step 8: Output
-After repeating the code, information for the best individual for Maumee TP data in 2013 is saved. Once all the years of interest are run, the output files for all the best individuals for each year for TP are created. There are 4 output files for each variable for each river. Those output files contain information for all the time periods run in the code.
+After repeating, information for the best individual (lowest MSE) for Maumee TP data in 2013 is saved. Once all the years of interest are run, the output files for all the best individuals for each year for TP are created. There are 4 output files for each variable for each river. Those output files contain information for all the time periods run in the code.
 
 ### Other Considerations
 The above example was for 4 strata. The code actually tests for 1-14 strata. Of course, for 1 strata, there is no need to create a population. For two strata, there is no need to crossover, as there are a very limited number of possible individuals. The genetic algorithm is only used for strata >= 3.
