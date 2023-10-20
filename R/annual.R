@@ -221,7 +221,7 @@ for(river in rivers){
             pop = big_combos[1:popSize,]
             big_combos = big_combos[-(1:popSize),]
 
-            iter = 3
+            iter = 35
             stopIter <- F
 
             for(i in seq(1,iter)){
