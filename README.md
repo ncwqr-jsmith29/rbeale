@@ -169,5 +169,7 @@ The above example was for 4 strata. The code actually tests for 1-14 strata. Of 
 
 The above example was also for calculating annual loads. The process is very similar for spring, but different for monthly and daily. For monthly loads, the number of possible individuals is fairly small, as the largest allele is between 28-31, depending on the month. This also means that the largest number of strata you can test is 10 (Rule 3). As a result, instead of taking a subset of the possible individuals and performing crossovers, the `monthly()` code simply creates a population of all possible individuals and performs Steps 3, 5, and 6. For daily loads, the code simply runs `sbeale()`. The result is that daily loads are just flow * concentration.
 
+If the dataset has no observations (all NAs), then the code produces an error output for that time period. If the dataset has too few observations to follow Rule 3, then the code produces a different error output for that time period.
+
 # Flowchart
 ![Flow chart of rbeale code](https://github.com/ncwqr-jsmith29/rbeale/blob/master/rbeale.png)
