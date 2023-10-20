@@ -66,7 +66,6 @@ monthly <- function(parent_directory, input_rivers){
                                          s8 = numeric(),
                                          s9 = numeric(),
                                          s10 = numeric())
-
       best_strata_mses_all <- data.frame(strata = numeric(),
                                          strata.n = numeric(),
                                          dload.bi_kgd = numeric(),
@@ -90,7 +89,6 @@ monthly <- function(parent_directory, input_rivers){
                                              Cl_kglenS = numeric(),
                                              flowmu_m3s = numeric(),
                                              flowav_m3s = numeric()) #mse.m_lowest_summary #best_summary_mses
-
       individual_mses_all <- data.frame(strata = numeric(),
                                         dload.bi_kgd = numeric(),
                                         dload.ub_kgd = numeric(),
@@ -248,6 +246,7 @@ monthly <- function(parent_directory, input_rivers){
 
               #best individual mse for this strata
               best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
+
               #best strata mses for this strata
               add.rows <- cbind(strata, strata, 1:strata, pop_strata_mses[[1]])
               names(add.rows)[2:3] <- c("strata", "strata.n")
@@ -274,7 +273,7 @@ monthly <- function(parent_directory, input_rivers){
       }#yearmo
 
       #add the yearmo into the new output files
-      #best_individuals_all <- cbind(YearMo, best_individuals_all)
+      #best_individuals_all <- cbind(out.year, best_individuals_all)
       individual_mses_all <- cbind(out.year, individual_mses_all)
       best_individual_mses_all <- cbind(out.year, best_individual_mses_all)
       best_strata_mses_all <- cbind(out.year, best_strata_mses_all)
@@ -291,6 +290,7 @@ monthly <- function(parent_directory, input_rivers){
 
       #filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
       #write.csv(best_individuals_all, filename, row.names = FALSE)
+
     }#variable
   }#river
 }#function
