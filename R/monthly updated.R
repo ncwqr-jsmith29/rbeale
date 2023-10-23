@@ -163,12 +163,15 @@ monthly <- function(parent_directory, input_rivers){
         if(all(!is.na(obs_data[,variable]))){
           strata_mses <- sbeale(obs_data$Flow, obs_data[, variable])
           strata_mses[7] <- strata_mses[7] * N^2
-          best_strata_mses[1,] <- c(1, 1, strata_mses)
-          best_individual_mses[1,] <- c(1, strata_mses)
-          one_individual_mse <- strata_mses[7] #format for output files
-          best_individuals <- strata_mses  #format for output files
+          best_strata_mses[1,] <- c(0, 1, strata_mses)
+          best_individual_mses[1,] <- c(0, strata_mses)
 
           print(paste("Running sbeale for", variable, "...", yearmo, sep = " "))
+
+          #format for output files
+          one_individual_mse<- c(0, strata_mses)#format for output files
+          best_individuals <- c(0, strata_mses)  #format for output files
+
         }else{
 
           for(strata in try_strata){
