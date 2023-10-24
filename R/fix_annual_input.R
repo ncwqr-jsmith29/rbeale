@@ -51,7 +51,7 @@ fix_annual_input <- function(annual_input){
 
   ##If there's one NA alone, then we're going to average the sample before and after
   ##we're doing this across all numeric columns in the dataset to save both time and power.
-  all_obs_data[,3:10] <- lapply(all_obs_data, function(z) {
+  all_obs_data[,8:15] <- lapply(all_obs_data[,8:15], function(z) {
     mtx <- cbind(c(NA, head(z, -1)), z, c(tail(z, -1), NA))
     mtx[is.na(mtx[,2]) & rowSums(is.na(mtx)) > 1,] <- NA
     out <- ifelse(is.na(mtx[,2]), rowMeans(mtx, na.rm = TRUE), mtx[,2])
