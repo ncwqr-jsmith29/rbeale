@@ -32,7 +32,7 @@ for(river in rivers){
   n.cores <- parallel::detectCores()
 
   #set max strata you want to test
-  maxstrata=14
+  maxstrata=4
 
   options(warn = -1)
   cl <- parallel::makeCluster(n.cores-1)
@@ -48,21 +48,77 @@ for(river in rivers){
   best_individuals <- data.frame(s1 = numeric(),
                                  s2 = numeric(),
                                  s3 = numeric(),
-                                 s4 = numeric(),
-                                 s5 = numeric(),
-                                 s6 = numeric(),
-                                 s7 = numeric(),
-                                 s8 = numeric(),
-                                 s9 = numeric(),
-                                 s10 = numeric(),
-                                 s11 = numeric(),
-                                 s12 = numeric(),
-                                 s13 = numeric(),
-                                 s14 = numeric())
+                                 s4 = numeric()#,
+                                 #s5 = numeric(),
+                                 #s6 = numeric(),
+                                 #s7 = numeric(),
+                                 #s8 = numeric(),
+                                 #s9 = numeric(),
+                                 #s10 = numeric(),
+                                 #s11 = numeric(),
+                                 #s12 = numeric(),
+                                 #s13 = numeric(),
+                                 #s14 = numeric()
+                                 )
 
   for(variable in variables){
 
+    ##Build data frames for output files
+    best_individuals_all <- data.frame(s1 = numeric(),
+                                       s2 = numeric(),
+                                       s3 = numeric(),
+                                       s4 = numeric()#,
+                                       #s5 = numeric(),
+                                       #s6 = numeric(),
+                                       #s7 = numeric(),
+                                       #s8 = numeric(),
+                                       #s9 = numeric(),
+                                       #s10 = numeric(),
+                                       #s11 = numeric(),
+                                       #s12 = numeric(),
+                                       #s13 = numeric(),
+                                       #s14 = numeric()
+                                       )
+    best_strata_mses_all <- data.frame(strata = numeric(),
+                                       strata.n = numeric(),
+                                       dload.bi_kgd = numeric(),
+                                       dload.ub_kgd = numeric(),
+                                       tload_kglenS = numeric(),
+                                       degf = numeric(),
+                                       lenObs = numeric(),
+                                       lenStr = numeric(),
+                                       MSE_kglenS = numeric(),
+                                       Cl_kglenS = numeric(),
+                                       flowmu_m3s = numeric(),
+                                       flowav_m3s = numeric()) #mse.m_lowest_all_strata #all_strata_best_mse
+    best_individual_mses_all <- data.frame(strata = numeric(),
+                                           dload.bi_kgd = numeric(),
+                                           dload.ub_kgd = numeric(),
+                                           tload_kglenS = numeric(),
+                                           degf = numeric(),
+                                           lenObs = numeric(),
+                                           lenStr = numeric(),
+                                           MSE_kglenS = numeric(),
+                                           Cl_kglenS = numeric(),
+                                           flowmu_m3s = numeric(),
+                                           flowav_m3s = numeric()) #mse.m_lowest_summary #best_summary_mses
+    individual_mses_all <- data.frame(strata = numeric(),
+                                      dload.bi_kgd = numeric(),
+                                      dload.ub_kgd = numeric(),
+                                      tload_kglenS = numeric(),
+                                      degf = numeric(),
+                                      lenObs = numeric(),
+                                      lenStr = numeric(),
+                                      MSE_kglenS = numeric(),
+                                      Cl_kglenS = numeric(),
+                                      flowmu_m3s = numeric(),
+                                      flowav_m3s = numeric())
+    out.year=data.frame(year = numeric())
+    out.year.mult=data.frame(year = numeric())
+
     for(year in wat_years){
+
+      print(wat_years)
 
       obs_data <- dplyr::filter(all_obs_data, WatYr == year)
 
@@ -109,6 +165,11 @@ for(river in rivers){
         best_individual_mses[1,] <- c(1, strata_mses)
 
         print(paste("Running sbeale for", variable, "...", year, sep = " "))
+
+        #format for output files
+        one_individual_mse<- c(0, strata_mses)#format for output files
+        best_individuals <- c(0, strata_mses)  #format for output files
+
       }else{
 
       for(strata in try_strata){
@@ -221,7 +282,7 @@ for(river in rivers){
             pop = big_combos[1:popSize,]
             big_combos = big_combos[-(1:popSize),]
 
-            iter = 35
+            iter = 5
             stopIter <- F
 
             for(i in seq(1,iter)){
@@ -304,23 +365,43 @@ for(river in rivers){
             best_strata_mses <- dplyr::bind_rows(best_strata_mses, add.rows)
           }#end else
         }#strata
-      }#end else
+      }#strings of NA
 
-      one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
+        one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
 
-
-      filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_strata_mses_", year, ".csv", sep = '')
-      write.csv(best_strata_mses, filename, row.names = FALSE)
-
-      filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_individual_mses_", year, ".csv", sep = '')
-      write.csv(best_individual_mses, filename, row.names = FALSE)
-
-      filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_", year, ".csv", sep = '')
-      write.csv(one_individual_mse, filename, row.names = FALSE)
-
-      filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_individuals_", year, ".csv", sep = '')
-      write.csv(best_individuals, filename, row.names = FALSE)
     }#year
+
+      ##add data to the dataframes whether it's from the raw or crossover data
+      individual_mses_all[nrow(individual_mses_all) + 1,] <- one_individual_mse #best_
+      best_individuals_all[nrow(best_individuals_all) + maxstrata,] <- best_individuals #best_individuals
+      best_strata_mses_all[nrow(best_strata_mses_all) + maxstrata,] <- best_strata_mses #best_strata_mses
+      #best_individual_mses_all[nrow(best_individual_mses_all) + nrow(best_individual_mses),] <- best_individual_mses #best_individual_mses
+
+
+      #create year output to build final output files
+      out.year[nrow(out.year) +1,] <- year
+      #out.year.mult[nrow(out.year.mult) + maxstrata] <- year
+
+
+      #add the year into the new output files
+      #best_individuals_all <- cbind(out.year.mult, best_individuals_all)
+      individual_mses_all <- cbind(out.year, individual_mses_all)
+      #best_individual_mses_all <- cbind(out.year.mult, best_individual_mses_all)
+      #best_strata_mses_all <- cbind(out.year.mult, best_strata_mses_all)
+
+      #write file for each variable - output should have 4 total files with all of that variable's data
+      filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_strata_mses", ".csv", sep = '')
+      write.csv(best_strata_mses_all, filename, row.names = FALSE)
+
+      filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_individual_mses", ".csv", sep = '')
+      write.csv(best_individual_mses_all, filename, row.names = FALSE)
+
+      filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best", ".csv", sep = '')
+      write.csv(individual_mses_all, filename, row.names = FALSE)
+
+      #filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
+      #write.csv(best_individuals_all, filename, row.names = FALSE)
+
   }#variable
 }#river
 }#function
