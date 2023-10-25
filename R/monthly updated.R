@@ -102,6 +102,8 @@ monthly <- function(parent_directory, input_rivers){
                                         flowav_m3s = numeric())
       out.year=data.frame(yearmo = numeric())
       out.year.mult = data.frame(yearmo = numeric())
+      out.year.mult.bim = data.frame(yearmo = numeric())
+      out.year.mult.bi = data.frame(yearmo = numeric())
 
       for(yearmo in yearmos){
 
@@ -169,9 +171,8 @@ monthly <- function(parent_directory, input_rivers){
 
           print(paste("Running sbeale for", variable, "...", yearmo, sep = " "))
 
-          #format for output files
+
           one_individual_mse<- c(0, strata_mses)#format for output files
-          best_individuals <- c(0, strata_mses)  #format for output files
 
         }else{
 
@@ -246,16 +247,21 @@ monthly <- function(parent_directory, input_rivers){
 
               best_individual <- as.numeric(as.vector(pop[1,]))
               best_individual <- c(best_individual, rep(NA, 12-strata-1))
-              #best_individuals[strata,] <- best_individual
+              best_individuals[strata,] <- best_individual
+
+              #print(best_individuals)
 
               #best individual mse for this strata
               best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
 
+              #print(best_individual_mses)
+
               #best strata mses for this strata
               add.rows <- cbind(strata, strata, 1:strata, pop_strata_mses[[1]])
-              names(add.rows)[2:3] <- c("strata", "strata.n")
+              names(add.rows)[1:2] <- c("strata", "strata.n")
               best_strata_mses <- dplyr::bind_rows(best_strata_mses, add.rows)
 
+              #print(best_strata_mses)
 
             }#end else
           }#strata
@@ -265,44 +271,63 @@ monthly <- function(parent_directory, input_rivers){
 
           }#strings of NA
 
-        ##add data to the dataframes whether it's from the raw or crossover data
+        nstrata <- nrow(best_strata_mses)
+        nstratabestind <- nrow(best_individuals)
+        nstratabestindmses <- nrow(best_individual_mses)
+
+        ##add data to the dataframes whether it's from the sbeale or crossover data
         individual_mses_all[nrow(individual_mses_all) + 1,] <- one_individual_mse #best_
 
-        data_frames_list <- list()
-        data_frames_list <- append(best_strata_mses_all, best_strata_mses)
-        best_strata_mses_all <- do.call(rbind, data_frames_list)
-
-        #best_individuals_all[nrow(best_individuals_all) + nrow(1:strata),] <- best_individuals #best_individuals
-        #best_strata_mses_all[nrow(best_strata_mses_all) + nrow(1:strata),] <- best_strata_mses #best_strata_mses
-        #best_individual_mses_all[nrow(best_individual_mses_all) + nrow(1:strata),] <- best_individual_mses #best_individual_mses
+        best_individuals_all[nrow(best_individuals_all) + nstratabestind,]
+        best_individuals_all<- rbind(best_individuals_all, best_individuals) #best_individuals
+        best_strata_mses_all[nrow(best_strata_mses_all) + nstrata,]
+        best_strata_mses_all<- rbind(best_strata_mses_all, best_strata_mses[,c(1:12)]) #best_strata_mses
+        ###Note: best_strata_mses_all will output NAs for any strata there were not enough data to run
+        best_individual_mses_all[nrow(best_individual_mses_all) + nstratabestindmses,]
+        best_individual_mses_all<- rbind(best_individual_mses_all, best_individual_mses) #best_individual_mses
 
         #create yearmo output to build final output files
         #for outputs with more than one strata/more than one potential row per yearmo, use out.year.mult
         out.year[nrow(out.year) +1,] <- yearmo
-        #out.year.mult[nrow(out.year.mult) + add_nrow_strata,] <- paste(yearmo)
+        #build output yearmos for best_strata_mses_all
+        out.year.mult[nrow(out.year.mult) + nstrata,]
+        input=data.frame(rep(yearmo, times=nstrata))
+        out.year.mult<- rbind(out.year.mult, input)
+        #build output yearmos for best ind mses
+        out.year.mult.bim[nrow(out.year.mult.bim) + nstratabestindmses,]
+        input.bim=data.frame(rep(yearmo, times=nstratabestindmses))
+        out.year.mult.bim<- rbind(out.year.mult.bim, input.bim)
+        #build output yearmos for best individuals
+        out.year.mult.bi[nrow(out.year.mult.bi) + nstratabestind,]
+        input.bi=data.frame(rep(yearmo, times=nstratabestind))
+        out.year.mult.bi<- rbind(out.year.mult.bi, input.bi)
 
-        print(out.year.mult)
 
       }#yearmo
 
+      #edit columns names for output
+      names(out.year.mult) <- "yearmo"
+      names(out.year.mult.bim) <- "yearmo"
+      names(out.year.mult.bi) <- "yearmo"
+
       #add the yearmo into the new output files
       individual_mses_all <- cbind(out.year, individual_mses_all)
-      #best_individuals_all <- cbind(out.year.mult, best_individuals_all)
-      #best_individual_mses_all <- cbind(out.year.mult, best_individual_mses_all)
-      #best_strata_mses_all <- cbind(out.year.mult, best_strata_mses_all)
+      #best_individuals_all <- cbind(out.year.mult.bi, best_individuals_all)
+      best_individual_mses_all <- cbind(out.year.mult.bim, best_individual_mses_all)
+      best_strata_mses_all <- cbind(out.year.mult, best_strata_mses_all)
 
       #write file for each variable - output should have 4 total files with all of that variable's data
       filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_strata_mses", ".csv", sep = '')
       write.csv(best_strata_mses_all, filename, row.names = FALSE)
 
-      #filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individual_mses", ".csv", sep = '')
-      #write.csv(best_individual_mses_all, filename, row.names = FALSE)
+      filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individual_mses", ".csv", sep = '')
+      write.csv(best_individual_mses_all, filename, row.names = FALSE)
 
       filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best", ".csv", sep = '')
       write.csv(individual_mses_all, filename, row.names = FALSE)
 
-      #filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
-      #write.csv(best_individuals_all, filename, row.names = FALSE)
+      filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
+      write.csv(best_individuals_all, filename, row.names = FALSE)
 
     }#variable
   }#river
