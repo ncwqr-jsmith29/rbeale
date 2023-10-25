@@ -48,18 +48,17 @@ for(river in rivers){
   best_individuals <- data.frame(s1 = numeric(),
                                  s2 = numeric(),
                                  s3 = numeric(),
-                                 s4 = numeric()#,
-                                 #s5 = numeric(),
-                                 #s6 = numeric(),
-                                 #s7 = numeric(),
-                                 #s8 = numeric(),
-                                 #s9 = numeric(),
-                                 #s10 = numeric(),
-                                 #s11 = numeric(),
-                                 #s12 = numeric(),
-                                 #s13 = numeric(),
-                                 #s14 = numeric()
-                                 )
+                                 s4 = numeric(),
+                                 s5 = numeric(),
+                                 s6 = numeric(),
+                                 s7 = numeric(),
+                                 s8 = numeric(),
+                                 s9 = numeric(),
+                                 s10 = numeric(),
+                                 s11 = numeric(),
+                                 s12 = numeric(),
+                                 s13 = numeric(),
+                                 s14 = numeric())
 
   for(variable in variables){
 
@@ -67,18 +66,17 @@ for(river in rivers){
     best_individuals_all <- data.frame(s1 = numeric(),
                                        s2 = numeric(),
                                        s3 = numeric(),
-                                       s4 = numeric()#,
-                                       #s5 = numeric(),
-                                       #s6 = numeric(),
-                                       #s7 = numeric(),
-                                       #s8 = numeric(),
-                                       #s9 = numeric(),
-                                       #s10 = numeric(),
-                                       #s11 = numeric(),
-                                       #s12 = numeric(),
-                                       #s13 = numeric(),
-                                       #s14 = numeric()
-                                       )
+                                       s4 = numeric(),
+                                       s5 = numeric(),
+                                       s6 = numeric(),
+                                       s7 = numeric(),
+                                       s8 = numeric(),
+                                       s9 = numeric(),
+                                       s10 = numeric(),
+                                       s11 = numeric(),
+                                       s12 = numeric(),
+                                       s13 = numeric(),
+                                       s14 = numeric())
     best_strata_mses_all <- data.frame(strata = numeric(),
                                        strata.n = numeric(),
                                        dload.bi_kgd = numeric(),
@@ -363,18 +361,17 @@ for(river in rivers){
             best_strata_mses <- dplyr::bind_rows(best_strata_mses, add.rows)
 
           }#end else
-        }#strata
+        }#end 2 strata
+      }#strata
 
         one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
-
-      }#strings of NA
 
         nstrata <- nrow(best_strata_mses)
         nstratabestind <- nrow(best_individuals)
         nstratabestindmses <- nrow(best_individual_mses)
 
 
-    }#year
+    }#end strings of NAs
 
       ##add data to the dataframes whether it's from the raw or crossover data
       individual_mses_all[nrow(individual_mses_all) + 1,] <- one_individual_mse #best_
@@ -402,7 +399,7 @@ for(river in rivers){
       input.bi=data.frame(rep(year, times=nstratabestind))
       out.year.mult.bi<- rbind(out.year.mult.bi, input.bi)
 
-  }#variable
+  }#year
 
     #edit columns names for output
     names(out.year.mult) <- "year"
@@ -411,7 +408,7 @@ for(river in rivers){
 
     #add the year into the new output files
     individual_mses_all <- cbind(out.year, individual_mses_all)
-    #best_individuals_all <- cbind(out.year.mult.bi, best_individuals_all)
+    best_individuals_all <- cbind(out.year.mult.bi, best_individuals_all)
     best_individual_mses_all <- cbind(out.year.mult.bim, best_individual_mses_all)
     best_strata_mses_all <- cbind(out.year.mult, best_strata_mses_all)
 
@@ -428,6 +425,6 @@ for(river in rivers){
     filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
     write.csv(best_individuals_all, filename, row.names = FALSE)
 
+}#variable
 }#river
 }#function
-}

@@ -110,6 +110,9 @@ spring <- function(parent_directory, input_rivers){
                                         flowmu_m3s = numeric(),
                                         flowav_m3s = numeric())
       out.year=data.frame(year = numeric())
+      out.year.mult=data.frame(year = numeric())
+      out.year.mult.bim = data.frame(year = numeric())
+      out.year.mult.bi = data.frame(year = numeric())
 
 
       for(year in wat_years){
@@ -155,14 +158,13 @@ spring <- function(parent_directory, input_rivers){
         if(all(!is.na(obs_data[,variable]))){
           strata_mses <- sbeale(obs_data$Flow, obs_data[, variable])
           strata_mses[7] <- strata_mses[7] * N^2
-          best_strata_mses[1,] <- c(1, 1, strata_mses)
-          best_individual_mses[1,] <- c(1, strata_mses)
+          best_strata_mses[1,] <- c(0, 1, strata_mses)
+          best_individual_mses[1,] <- c(0, strata_mses)
 
           print(paste("Running sbeale for", variable, "...", year, sep = " "))
 
           #format for output files
           one_individual_mse<- c(0, strata_mses)#format for output files
-          best_individuals <- c(0, strata_mses)  #format for output files
 
         }else{
 
@@ -354,44 +356,69 @@ spring <- function(parent_directory, input_rivers){
               names(add.rows)[1:2] <- c("strata", "strata.n")
               best_strata_mses <- dplyr::bind_rows(best_strata_mses, add.rows)
             }#end else
-          }#strata
-        }
+          }#end 2 strata
+        }#strata
 
           one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
 
-      }#end else
+          nstrata <- nrow(best_strata_mses)
+          nstratabestind <- nrow(best_individuals)
+          nstratabestindmses <- nrow(best_individual_mses)
 
+      }#strings of NA
 
         ##add data to the dataframes whether it's from the raw or crossover data
         individual_mses_all[nrow(individual_mses_all) + 1,] <- one_individual_mse #best_
-        #best_individuals_all[nrow(best_individuals_all) + nrow(best_individuals),] <- best_individuals #best_individuals
-        best_strata_mses_all[nrow(best_strata_mses_all) + 1,] <- best_strata_mses #best_strata_mses
-        best_individual_mses_all[nrow(best_individual_mses_all) + 1,] <- best_individual_mses #best_individual_mses
+        best_individuals_all[nrow(best_individuals_all) + nstratabestind,]
+        best_individuals_all<- rbind(best_individuals_all, best_individuals) #best_individuals
+        best_strata_mses_all[nrow(best_strata_mses_all) + nstrata,]
+        best_strata_mses_all<- rbind(best_strata_mses_all, best_strata_mses[,c(1:12)]) #best_strata_mses
+        ###Note: best_strata_mses_all will output NAs for any strata there were not enough data to run
+        best_individual_mses_all[nrow(best_individual_mses_all) + nstratabestindmses,]
+        best_individual_mses_all<- rbind(best_individual_mses_all, best_individual_mses) #best_individual_mses
 
         #create year output to build final output files
+        ##Note: for outputs with more than one strata/more than one potential row per year, use out.year.mult
         out.year[nrow(out.year) +1,] <- year
+        #build output years for best_strata_mses_all
+        out.year.mult[nrow(out.year.mult) + nstrata,]
+        input=data.frame(rep(year, times=nstrata))
+        out.year.mult<- rbind(out.year.mult, input)
+        #build output years for best ind mses
+        out.year.mult.bim[nrow(out.year.mult.bim) + nstratabestindmses,]
+        input.bim=data.frame(rep(year, times=nstratabestindmses))
+        out.year.mult.bim<- rbind(out.year.mult.bim, input.bim)
+        #build output years for best individuals
+        out.year.mult.bi[nrow(out.year.mult.bi) + nstratabestind,]
+        input.bi=data.frame(rep(year, times=nstratabestind))
+        out.year.mult.bi<- rbind(out.year.mult.bi, input.bi)
 
       }#year
 
-      #add the year into the new output files
-      #best_individuals_all <- cbind(out.year, best_individuals_all)
-      individual_mses_all <- cbind(out.year, individual_mses_all)
-      best_individual_mses_all <- cbind(out.year, best_individual_mses_all)
-      best_strata_mses_all <- cbind(out.year, best_strata_mses_all)
+      #edit columns names for output
+      names(out.year.mult) <- "year"
+      names(out.year.mult.bim) <- "year"
+      names(out.year.mult.bi) <- "year"
 
+      #add the year into the new output files
+      individual_mses_all <- cbind(out.year, individual_mses_all)
+      best_individuals_all <- cbind(out.year.mult.bi, best_individuals_all)
+      best_individual_mses_all <- cbind(out.year.mult.bim, best_individual_mses_all)
+      best_strata_mses_all <- cbind(out.year.mult, best_strata_mses_all)
 
       #write file for each variable - output should have 4 total files with all of that variable's data
-      filename = paste(parent_directory, "/", river, "/Output/Spring/", variable, "/", variable, "_best_strata_mses_", year, ".csv", sep = '')
-      write.csv(best_strata_mses, filename, row.names = FALSE)
+      filename = paste(parent_directory, "/", river, "/Output/Spring/", variable, "/", variable, "_best_strata_mses", ".csv", sep = '')
+      write.csv(best_strata_mses_all, filename, row.names = FALSE)
 
-      filename = paste(parent_directory, "/", river, "/Output/Spring/", variable, "/", variable, "_best_individual_mses_", year, ".csv", sep = '')
-      write.csv(best_individual_mses, filename, row.names = FALSE)
+      filename = paste(parent_directory, "/", river, "/Output/Spring/", variable, "/", variable, "_best_individual_mses", ".csv", sep = '')
+      write.csv(best_individual_mses_all, filename, row.names = FALSE)
 
-      filename = paste(parent_directory, "/", river, "/Output/Spring/", variable, "/", variable, "_best_", year, ".csv", sep = '')
-      write.csv(one_individual_mse, filename, row.names = FALSE)
+      filename = paste(parent_directory, "/", river, "/Output/Spring/", variable, "/", variable, "_best", ".csv", sep = '')
+      write.csv(individual_mses_all, filename, row.names = FALSE)
 
-      filename = paste(parent_directory, "/", river, "/Output/Spring/", variable, "/", variable, "_best_individuals_", year, ".csv", sep = '')
-      write.csv(best_individuals, filename, row.names = FALSE)
+      filename = paste(parent_directory, "/", river, "/Output/Spring/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
+      write.csv(best_individuals_all, filename, row.names = FALSE)
+
 
     }#variable
   }#river
