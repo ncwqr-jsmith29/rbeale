@@ -249,19 +249,13 @@ monthly <- function(parent_directory, input_rivers){
               best_individual <- c(best_individual, rep(NA, 12-strata-1))
               best_individuals[strata,] <- best_individual
 
-              #print(best_individuals)
-
               #best individual mse for this strata
               best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
-
-              #print(best_individual_mses)
 
               #best strata mses for this strata
               add.rows <- cbind(strata, strata, 1:strata, pop_strata_mses[[1]])
               names(add.rows)[1:2] <- c("strata", "strata.n")
               best_strata_mses <- dplyr::bind_rows(best_strata_mses, add.rows)
-
-              #print(best_strata_mses)
 
             }#end else
           }#strata
