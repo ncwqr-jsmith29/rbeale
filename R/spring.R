@@ -361,11 +361,11 @@ spring <- function(parent_directory, input_rivers){
 
           one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
 
-          nstrata <- nrow(best_strata_mses)
-          nstratabestind <- nrow(best_individuals)
-          nstratabestindmses <- nrow(best_individual_mses)
-
       }#strings of NA
+
+        nstrata <- nrow(best_strata_mses)
+        nstratabestind <- nrow(best_individuals)
+        nstratabestindmses <- nrow(best_individual_mses)
 
         ##add data to the dataframes whether it's from the raw or crossover data
         individual_mses_all[nrow(individual_mses_all) + 1,] <- one_individual_mse #best_
