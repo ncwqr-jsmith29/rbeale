@@ -12,7 +12,7 @@ library(rbeale)
 ## 1. Prepare input files
 This package was originally built to work with files downloaded from the [NCWQR Data Portal](https://ncwqr-data.org/HTLP/Portal). If you use downloads from the data portal, then you only need to separate the data into separate CSV files for each river.
 
-If you are using your own data, then use the RiverSample.csv file as a template.
+If you are using your own data, then use the River Template.csv file as a template.
 
 We recommend changing the names of your input files to the name of the river (i.e. Maumee.csv).
 
@@ -51,7 +51,7 @@ These functions call the rest of the functions, as needed. There is no need to r
 >
 > Individual - A vector of alleles
 >
-> Population - A matrix of individuals, where each row is a single individual
+> Population - A matrix of individuals, where each row is a single individual (e.g., sampling point)
 
 ## Origins
 NCWQR scientist, R. Peter Richards, wrote FORTRAN code to calculate nutrient loads using the Beale Ratio Estimator. That code was translated to R in 2016 by NCWQR scientist, Rem Confesor. That translation is what is contained in the `sbeale()` function of this package. The `sbeale()` function calculates the load for a given timeframe, using all available data for that timeframe; any missing data is ignored.
