@@ -45,38 +45,42 @@ for(river in rivers){
   # all_obs_data[,26] <- all_obs_data[,26]/flow/86.4*1000
 
   #Where s1-s14 = a different strata. In order to have all values in the output, must have s# for as many strata as is running.
-  best_individuals <- data.frame(s1 = numeric(),
-                                 s2 = numeric(),
-                                 s3 = numeric(),
-                                 s4 = numeric(),
-                                 s5 = numeric(),
-                                 s6 = numeric(),
-                                 s7 = numeric(),
-                                 s8 = numeric(),
-                                 s9 = numeric(),
-                                 s10 = numeric(),
-                                 s11 = numeric(),
-                                 s12 = numeric(),
-                                 s13 = numeric(),
-                                 s14 = numeric())
+  best_individuals <- data.frame(yearmo = numeric(),
+                                 a1 = numeric(),
+                                 a2 = numeric(),
+                                 a3 = numeric(),
+                                 a4 = numeric(),
+                                 a5 = numeric(),
+                                 a6 = numeric(),
+                                 a7 = numeric(),
+                                 a8 = numeric(),
+                                 a9 = numeric(),
+                                 a10 = numeric(),
+                                 a11 = numeric(),
+                                 a12 = numeric(),
+                                 a13 = numeric(),
+                                 a14 = numeric(),
+                                 a15 = numeric())
 
   for(variable in variables){
 
     ##Build data frames for output files
-    best_individuals_all <- data.frame(s1 = numeric(),
-                                       s2 = numeric(),
-                                       s3 = numeric(),
-                                       s4 = numeric(),
-                                       s5 = numeric(),
-                                       s6 = numeric(),
-                                       s7 = numeric(),
-                                       s8 = numeric(),
-                                       s9 = numeric(),
-                                       s10 = numeric(),
-                                       s11 = numeric(),
-                                       s12 = numeric(),
-                                       s13 = numeric(),
-                                       s14 = numeric())
+    best_individuals_all <- data.frame(yearmo = numeric(),
+                                       a1 = numeric(),
+                                       a2 = numeric(),
+                                       a3 = numeric(),
+                                       a4 = numeric(),
+                                       a5 = numeric(),
+                                       a6 = numeric(),
+                                       a7 = numeric(),
+                                       a8 = numeric(),
+                                       a9 = numeric(),
+                                       a10 = numeric(),
+                                       a11 = numeric(),
+                                       a12 = numeric(),
+                                       a13 = numeric(),
+                                       a14 = numeric(),
+                                       a15 = numeric())
     best_strata_mses_all <- data.frame(strata = numeric(),
                                        strata.n = numeric(),
                                        dload.bi_kgd = numeric(),
@@ -239,8 +243,8 @@ for(river in rivers){
             pop_strata_mses <- pop_strata_mses[lowest_individual_indices]
 
             best_individual <- as.numeric(as.vector(pop[1,]))
-            best_individual <- c(best_individual, rep(NA, maxstrata-strata-1))
-            best_individuals[strata,] <- best_individual
+            best_individual <- c(year, best_individual, rep(NA, maxstrata-strata))
+            best_individuals_all[nrow(best_individuals_all) + 1,] <-  best_individual
 
             #best individual mse for this strata
             best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
@@ -349,9 +353,9 @@ for(river in rivers){
 
             best_individual <- as.numeric(as.vector(pop[1,]))
             if(strata < maxstrata){
-              best_individual <- c(best_individual, rep(NA, maxstrata-strata-1))
+              best_individual <- c(year, best_individual, rep(NA, maxstrata-strata))
             }
-            best_individuals[strata,] <- best_individual
+            best_individuals_all[nrow(best_individuals_all) + 1,] <-  best_individual
 
             #best individual mse for this strata
             best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
@@ -369,13 +373,10 @@ for(river in rivers){
     }#end strings of NAs
 
       nstrata <- nrow(best_strata_mses)
-      nstratabestind <- nrow(best_individuals)
       nstratabestindmses <- nrow(best_individual_mses)
 
       ##add data to the dataframes whether it's from the raw or crossover data
       individual_mses_all[nrow(individual_mses_all) + 1,] <- one_individual_mse #best_
-      best_individuals_all[nrow(best_individuals_all) + nstratabestind,]
-      best_individuals_all<- rbind(best_individuals_all, best_individuals) #best_individuals
       best_strata_mses_all[nrow(best_strata_mses_all) + nstrata,]
       best_strata_mses_all<- rbind(best_strata_mses_all, best_strata_mses[,c(1:12)]) #best_strata_mses
       ###Note: best_strata_mses_all will output NAs for any strata there were not enough data to run
@@ -393,21 +394,15 @@ for(river in rivers){
       out.year.mult.bim[nrow(out.year.mult.bim) + nstratabestindmses,]
       input.bim=data.frame(rep(year, times=nstratabestindmses))
       out.year.mult.bim<- rbind(out.year.mult.bim, input.bim)
-      #build output years for best individuals
-      out.year.mult.bi[nrow(out.year.mult.bi) + nstratabestind,]
-      input.bi=data.frame(rep(year, times=nstratabestind))
-      out.year.mult.bi<- rbind(out.year.mult.bi, input.bi)
 
   }#year
 
     #edit columns names for output
     names(out.year.mult) <- "year"
     names(out.year.mult.bim) <- "year"
-    names(out.year.mult.bi) <- "year"
 
     #add the year into the new output files
     individual_mses_all <- cbind(out.year, individual_mses_all)
-    best_individuals_all <- cbind(out.year.mult.bi, best_individuals_all)
     best_individual_mses_all <- cbind(out.year.mult.bim, best_individual_mses_all)
     best_strata_mses_all <- cbind(out.year.mult, best_strata_mses_all)
 

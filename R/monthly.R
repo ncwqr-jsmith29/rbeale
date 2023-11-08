@@ -40,32 +40,36 @@ monthly <- function(parent_directory, input_rivers){
     # flow <- all_obs_data$Flow
     # all_obs_data[,26] <- all_obs_data[,26]/flow/86.4*1000
 
-    best_individuals <- data.frame(s1 = numeric(),
-                                   s2 = numeric(),
-                                   s3 = numeric(),
-                                   s4 = numeric(),
-                                   s5 = numeric(),
-                                   s6 = numeric(),
-                                   s7 = numeric(),
-                                   s8 = numeric(),
-                                   s9 = numeric(),
-                                   s10 = numeric())
+    best_individual <- data.frame(yearmo = numeric(),
+                                  a1 = numeric(),
+                                  a2 = numeric(),
+                                  a3 = numeric(),
+                                  a4 = numeric(),
+                                  a5 = numeric(),
+                                  a6 = numeric(),
+                                  a7 = numeric(),
+                                  a8 = numeric(),
+                                  a9 = numeric(),
+                                  a10 = numeric(),
+                                  a11 = numeric())
 
 
 
     for(variable in variables){
 
       ##Build data frames for output files
-      best_individuals_all <- data.frame(s1 = numeric(),
-                                         s2 = numeric(),
-                                         s3 = numeric(),
-                                         s4 = numeric(),
-                                         s5 = numeric(),
-                                         s6 = numeric(),
-                                         s7 = numeric(),
-                                         s8 = numeric(),
-                                         s9 = numeric(),
-                                         s10 = numeric())
+      best_individuals_all <- data.frame(yearmo = numeric(),
+                                         a1 = numeric(),
+                                         a2 = numeric(),
+                                         a3 = numeric(),
+                                         a4 = numeric(),
+                                         a5 = numeric(),
+                                         a6 = numeric(),
+                                         a7 = numeric(),
+                                         a8 = numeric(),
+                                         a9 = numeric(),
+                                         a10 = numeric(),
+                                         a11 = numeric())
       best_strata_mses_all <- data.frame(strata = numeric(),
                                          strata.n = numeric(),
                                          dload.bi_kgd = numeric(),
@@ -171,7 +175,7 @@ monthly <- function(parent_directory, input_rivers){
 
           print(paste("Running sbeale for", variable, "...", yearmo, sep = " "))
 
-
+          #format for output files
           one_individual_mse<- c(0, strata_mses)#format for output files
 
         }else{
@@ -246,8 +250,9 @@ monthly <- function(parent_directory, input_rivers){
               pop_strata_mses <- pop_strata_mses[lowest_individual_indices]
 
               best_individual <- as.numeric(as.vector(pop[1,]))
-              best_individual <- c(best_individual, rep(NA, max_strata-strata-1))
-              best_individuals[strata,] <- best_individual
+              ##10 allows for the appropriate numbers of NAs to be filled for February, as opposed to using maxstrata which changes for each month length
+              best_individual <- c(yearmo, best_individual, rep(NA, 10-strata))
+              best_individuals_all[nrow(best_individuals_all) + 1,] <-  best_individual
 
               #best individual mse for this strata
               best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
@@ -262,23 +267,19 @@ monthly <- function(parent_directory, input_rivers){
 
           one_individual_mse <- dplyr::slice_head(dplyr::arrange(best_individual_mses, MSE_kglenS), n = 1)
 
-
         }#strings of NA
 
         nstrata <- nrow(best_strata_mses)
-        nstratabestind <- nrow(best_individuals)
         nstratabestindmses <- nrow(best_individual_mses)
 
         ##add data to the dataframes whether it's from the sbeale or crossover data
         individual_mses_all[nrow(individual_mses_all) + 1,] <- one_individual_mse #best_
-
-        best_individuals_all[nrow(best_individuals_all) + nstratabestind,]
-        best_individuals_all<- rbind(best_individuals_all, best_individuals) #best_individuals
         best_strata_mses_all[nrow(best_strata_mses_all) + nstrata,]
         best_strata_mses_all<- rbind(best_strata_mses_all, best_strata_mses[,c(1:12)]) #best_strata_mses
         ###Note: best_strata_mses_all will output NAs for any strata there were not enough data to run
         best_individual_mses_all[nrow(best_individual_mses_all) + nstratabestindmses,]
         best_individual_mses_all<- rbind(best_individual_mses_all, best_individual_mses) #best_individual_mses
+
 
         #create yearmo output to build final output files
         #for outputs with more than one strata/more than one potential row per yearmo, use out.year.mult
@@ -291,10 +292,6 @@ monthly <- function(parent_directory, input_rivers){
         out.year.mult.bim[nrow(out.year.mult.bim) + nstratabestindmses,]
         input.bim=data.frame(rep(yearmo, times=nstratabestindmses))
         out.year.mult.bim<- rbind(out.year.mult.bim, input.bim)
-        #build output yearmos for best individuals
-        out.year.mult.bi[nrow(out.year.mult.bi) + nstratabestind,]
-        input.bi=data.frame(rep(yearmo, times=nstratabestind))
-        out.year.mult.bi<- rbind(out.year.mult.bi, input.bi)
 
 
       }#yearmo
@@ -302,11 +299,9 @@ monthly <- function(parent_directory, input_rivers){
       #edit columns names for output
       names(out.year.mult) <- "yearmo"
       names(out.year.mult.bim) <- "yearmo"
-      names(out.year.mult.bi) <- "yearmo"
 
       #add the yearmo into the new output files
       individual_mses_all <- cbind(out.year, individual_mses_all)
-      best_individuals_all <- cbind(out.year.mult.bi, best_individuals_all)
       best_individual_mses_all <- cbind(out.year.mult.bim, best_individual_mses_all)
       best_strata_mses_all <- cbind(out.year.mult, best_strata_mses_all)
 
