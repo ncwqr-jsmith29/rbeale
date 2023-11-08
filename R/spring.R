@@ -43,7 +43,8 @@ spring <- function(parent_directory, input_rivers){
     # flow <- all_obs_data$Flow
     # all_obs_data[,26] <- all_obs_data[,26]/flow/86.4*1000
 
-    best_individuals <- data.frame(year = numeric(),
+    #Where a1-a14 = an allele for each strata. Must have maxstrata+1 a#= in order to ensure code runs and produces appropriate output.
+    best_individual <- data.frame(year = numeric(),
                                    a1 = numeric(),
                                    a2 = numeric(),
                                    a3 = numeric(),
@@ -57,7 +58,8 @@ spring <- function(parent_directory, input_rivers){
                                    a11 = numeric(),
                                    a12 = numeric(),
                                    a13 = numeric(),
-                                   a14 = numeric())
+                                   a14 = numeric(),
+                                   a15 = numeric())
 
     for(variable in variables){
 
@@ -76,7 +78,8 @@ spring <- function(parent_directory, input_rivers){
                                          a11 = numeric(),
                                          a12 = numeric(),
                                          a13 = numeric(),
-                                         a14 = numeric())
+                                         a14 = numeric(),
+                                         a15 = numeric())
       best_strata_mses_all <- data.frame(strata = numeric(),
                                          strata.n = numeric(),
                                          dload.bi_kgd = numeric(),

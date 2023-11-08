@@ -44,8 +44,8 @@ for(river in rivers){
   # flow <- all_obs_data$Flow
   # all_obs_data[,26] <- all_obs_data[,26]/flow/86.4*1000
 
-  #Where s1-s14 = a different strata. In order to have all values in the output, must have s# for as many strata as is running.
-  best_individuals <- data.frame(yearmo = numeric(),
+  #Where a1-a14 = an allele for each strata. Must have maxstrata+1 a#= in order to ensure code runs and produces appropriate output.
+  best_individual <- data.frame(yearmo = numeric(),
                                  a1 = numeric(),
                                  a2 = numeric(),
                                  a3 = numeric(),
