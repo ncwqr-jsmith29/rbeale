@@ -12,9 +12,9 @@ library(rbeale)
 ## 1. Prepare input files
 This package was originally built to work with files downloaded from the [NCWQR Data Portal](https://ncwqr-data.org/HTLP/Portal). If you use downloads from the data portal, then you only need to separate the data into separate CSV files for each river.
 
-If you are using your own data, then use the River Template.csv file as a template.
+If you are using your own data, then use the [RiverTemplate.csv](https://github.com/ncwqr-jsmith29/rbeale/blob/master/RiverTemplate.csv) file as a template. The columns identified as Qualifiers in the RiverTemplate.csv are optional as they are removed early in the rbeale functions and do not alter the outcome of the load estimates. Note: Input data are flow and concentration.
 
-We recommend changing the names of your input files to the name of the river (i.e. Maumee.csv).
+We recommend changing the names of your input files to the name of the river (i.e. Maumee.csv). 
 
 ## 2. Put all input files in a single directory
 Make sure you put all input files in a single folder; it doesn't matter where.
