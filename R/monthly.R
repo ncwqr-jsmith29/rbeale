@@ -58,18 +58,18 @@ monthly <- function(parent_directory, input_rivers){
     for(variable in variables){
 
       ##Build data frames for output files
-      best_individuals_all <- data.frame(yearmo = numeric(),
-                                         a1 = numeric(),
-                                         a2 = numeric(),
-                                         a3 = numeric(),
-                                         a4 = numeric(),
-                                         a5 = numeric(),
-                                         a6 = numeric(),
-                                         a7 = numeric(),
-                                         a8 = numeric(),
-                                         a9 = numeric(),
-                                         a10 = numeric(),
-                                         a11 = numeric())
+      #best_individuals_all <- data.frame(yearmo = numeric(),
+      #                                   a1 = numeric(),
+      #                                   a2 = numeric(),
+      #                                   a3 = numeric(),
+      #                                   a4 = numeric(),
+      #                                   a5 = numeric(),
+      #                                   a6 = numeric(),
+      #                                   a7 = numeric(),
+      #                                   a8 = numeric(),
+      #                                   a9 = numeric(),
+      #                                   a10 = numeric(),
+      #                                   a11 = numeric())
       best_strata_mses_all <- data.frame(strata = numeric(),
                                          strata.n = numeric(),
                                          dload.bi_kgd = numeric(),
@@ -252,7 +252,7 @@ monthly <- function(parent_directory, input_rivers){
               best_individual <- as.numeric(as.vector(pop[1,]))
               ##10 allows for the appropriate numbers of NAs to be filled for February, as opposed to using maxstrata which changes for each month length
               best_individual <- c(yearmo, best_individual, rep(NA, 10-strata))
-              best_individuals_all[nrow(best_individuals_all) + 1,] <-  best_individual
+              #best_individuals_all[nrow(best_individuals_all) + 1,] <-  best_individual
 
               #best individual mse for this strata
               best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
@@ -315,8 +315,8 @@ monthly <- function(parent_directory, input_rivers){
       filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best", ".csv", sep = '')
       write.csv(individual_mses_all, filename, row.names = FALSE)
 
-      filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
-      write.csv(best_individuals_all, filename, row.names = FALSE)
+      #filename = paste(parent_directory, "/", river, "/Output/Monthly/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
+      #write.csv(best_individuals_all, filename, row.names = FALSE)
 
     }#variable
   }#river

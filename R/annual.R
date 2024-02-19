@@ -65,22 +65,22 @@ for(river in rivers){
   for(variable in variables){
 
     ##Build data frames for output files
-    best_individuals_all <- data.frame(yearmo = numeric(),
-                                       a1 = numeric(),
-                                       a2 = numeric(),
-                                       a3 = numeric(),
-                                       a4 = numeric(),
-                                       a5 = numeric(),
-                                       a6 = numeric(),
-                                       a7 = numeric(),
-                                       a8 = numeric(),
-                                       a9 = numeric(),
-                                       a10 = numeric(),
-                                       a11 = numeric(),
-                                       a12 = numeric(),
-                                       a13 = numeric(),
-                                       a14 = numeric(),
-                                       a15 = numeric())
+    #best_individuals_all <- data.frame(yearmo = numeric(),
+    #                                   a1 = numeric(),
+    #                                   a2 = numeric(),
+    #                                   a3 = numeric(),
+    #                                   a4 = numeric(),
+    #                                   a5 = numeric(),
+    #                                   a6 = numeric(),
+    #                                   a7 = numeric(),
+    #                                   a8 = numeric(),
+    #                                   a9 = numeric(),
+    #                                   a10 = numeric(),
+    #                                   a11 = numeric(),
+    #                                   a12 = numeric(),
+    #                                   a13 = numeric(),
+    #                                   a14 = numeric(),
+    #                                   a15 = numeric())
     best_strata_mses_all <- data.frame(strata = numeric(),
                                        strata.n = numeric(),
                                        dload.bi_kgd = numeric(),
@@ -244,7 +244,7 @@ for(river in rivers){
 
             best_individual <- as.numeric(as.vector(pop[1,]))
             best_individual <- c(year, best_individual, rep(NA, maxstrata-strata))
-            best_individuals_all[nrow(best_individuals_all) + 1,] <-  best_individual
+            #best_individuals_all[nrow(best_individuals_all) + 1,] <-  best_individual
 
             #best individual mse for this strata
             best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
@@ -355,7 +355,7 @@ for(river in rivers){
             if(strata < maxstrata){
               best_individual <- c(year, best_individual, rep(NA, maxstrata-strata))
             }
-            best_individuals_all[nrow(best_individuals_all) + 1,] <-  best_individual
+            #best_individuals_all[nrow(best_individuals_all) + 1,] <-  best_individual
 
             #best individual mse for this strata
             best_individual_mses[strata,] <- c(strata, as.numeric(as.vector(lowest_individual_mses[1,])))
@@ -416,8 +416,8 @@ for(river in rivers){
     filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best", ".csv", sep = '')
     write.csv(individual_mses_all, filename, row.names = FALSE)
 
-    filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
-    write.csv(best_individuals_all, filename, row.names = FALSE)
+    #filename = paste(parent_directory, "/", river, "/Output/Annual/", variable, "/", variable, "_best_individuals", ".csv", sep = '')
+    #write.csv(best_individuals_all, filename, row.names = FALSE)
 
 }#variable
 }#river
