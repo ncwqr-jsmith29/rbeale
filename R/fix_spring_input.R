@@ -16,7 +16,16 @@ fix_spring_input <- function(spring_input){
   all_obs_data <- dplyr::select(spring_input, -contains("Qualifiers"))
   all_obs_data <- dplyr::rename(all_obs_data, Date = 1, Flow = 2, TSS = 3, TP = 4, SRP = 5, NO23 = 6, TKN = 7, Cl = 8, SO4 = 9, Si = 10, Cond = 11)
   all_obs_data <- dplyr::select(all_obs_data, -Cond)
-  all_obs_data <- dplyr::mutate(all_obs_data, Date = as.Date(Date, format = "%m/%d/%Y %H:%M"))
+  #Recognize a number of date formats and format from there to be able to continue analyses.
+  if(all(grepl("\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}", all_obs_data$Date))) {
+    # If the format is "%m/%d/%Y %H:%M", leave it as is
+    all_obs_data$Date <- as.POSIXct(all_obs_data$Date, format = "%m/%d/%Y %H:%M")
+  } else {
+    # If the format is different, parse it and then format
+    all_obs_data$Date <- parse_date_time(all_obs_data$Date, orders = c("ymd_HMS", "mdy_HMS", "dmy_HMS",
+                                                                       "ymd", "mdy", "dmy","ymd", "mdy", "dmy",
+                                                                       "ymd_HM", "mdy_HM", "dmy_HM"))
+  }
 
   #Gets data prepared. Averages variables if there are multiple observations for a single day and fills in missing dates with NA.
   start.date <- all_obs_data$Date[1]
