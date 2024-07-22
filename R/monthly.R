@@ -113,7 +113,7 @@ monthly <- function(parent_directory, input_rivers){
 
         year <- as.numeric(substr(yearmo, 1, 4))
         mo <- as.numeric(substr(yearmo, 5, 6))
-        if((lubridate::leap_year(year)) && (mo == 2)){
+        if((lubridate::leap_year(year)) && (mo == 02)){
           last.allele <- 29
         }else{
           last.allele <- switch(mo, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
