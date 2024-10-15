@@ -1,0 +1,52 @@
+---
+title: "rbeale_tutorial"
+author: "Colleen Cosgrove"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction to rbeale
+
+rbeale is a load estimator based off of Beale Ratio Estimator.
+
+This script simulates running data for Maumee River in Northwest Ohio from 2003. This data is from the National Center for Water Quality Research (NCWQR) at Heidelberg University. Use of this or any other data fromt the NCWQR can be found at the NCWQR Data Portal https://ncwqr-data.org/HTLP/Portal and should be cited appropriately.
+
+First, install and/or load the package
+```{r}
+library(devtools)
+install_github("ncwqr-jsmith29/rbeale")
+library(rbeale)
+```
+
+Next, set the working directory, parent directory, and define all input rivers that will be tested in this rbeale run
+```{r}
+setwd("rbeale") ## This should be the directory where the data is stored
+parent_directory = "ExampleData"
+
+input_rivers = "Maumee" ## This should include a list of any rivers being tested in this run
+```
+
+Create input and output folders for each river
+```{r}
+create_folders(parent_directory, input_rivers, variables = "ALL", input_directory = getwd(), input_files = "Maumee.csv")
+```
+
+### Note: all folders should contain your data in the first folder of each river as a csv. See 'RiverTemplate.csv' for an example of the format of the data. 
+
+###Input files must have the same name as the river name and be in the same folder as the river name. For example, the Maumee River input file should be named "Maumee.csv" and be in the Maumee folder.
+
+Next, run the function associated with your desired time frame (annual, monthly, seasonal - called spring in this package, daily)
+```{r}
+annual(parent_directory, input_rivers)
+monthly(parent_directory, input_rivers)
+spring(parent_directory, input_rivers) # runs loads during 'loading season' March through July in this region of the world.
+daily(parent_directory, input_rivers)
+```
+
+rbeale will create outputs for each river, timeframe, and analyte as seen in the folders.
