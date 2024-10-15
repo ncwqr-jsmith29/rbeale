@@ -1,6 +1,8 @@
 # rbeale
 Welcome to the rbeale package! This package was built by team members at the National Center for Water Quality Research (NCWQR) in Tiffin, OH. The purpose of the rbeale package is to make it easy for reserachers to calculate nutrient loads in R, using a Beale Ratio Estimator.
 
+For questions, contact [Colleen Cosgrove, PostDoc](ccosgrov@heidelberg.edu)
+
 # Install
 ```
 library(devtools)
