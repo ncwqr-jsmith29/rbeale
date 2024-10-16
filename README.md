@@ -45,7 +45,7 @@ These functions call the rest of the functions, as needed. There is no need to r
 >
 > Timeframe/Load Timeframe - Annual, spring (March - July), monthly, or daily
 >
-> Variables/Nutrient Variables - TSS, TP, SRP, NO23, TKN, Cl, SO4, Si
+> Variables/Nutrient Variables - TSS, TP, SRP, NO23, TKN, Cl, SO4, Si (Concentration units should be in mg/L and flow should be in CFS.)
 >
 > Strata - A subset of the dataset of interest (e.g., TP values for Maumee in 2013) (n strata)
 >
