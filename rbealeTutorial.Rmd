@@ -39,7 +39,7 @@ Create input and output folders for each river
 create_folders(parent_directory, input_rivers, variables = "ALL", input_directory = getwd(), input_files = "Maumee.csv")
 ```
 
-### Note: all folders should contain your data in the first folder of each river as a csv. See 'RiverTemplate.csv' for an example of the format of the data. 
+### Note: all folders should contain your data in the first folder of each river as a csv. See 'RiverTemplate.csv' for an example of the format of the data. Concentration units should be in mg/L and flow should be in CFS.
 
 ###Input files must have the same name as the river name and be in the same folder as the river name. For example, the Maumee River input file should be named "Maumee.csv" and be in the Maumee folder.
 
