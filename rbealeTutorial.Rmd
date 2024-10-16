@@ -27,12 +27,14 @@ library(rbeale)
 Next, set the working directory, parent directory, and define all input rivers that will be tested in this rbeale run
 ```{r}
 setwd("rbeale") ## This should be the directory where the data is stored
-parent_directory = "ExampleData"
+parent_directory = "ExampleData" ## This should be the directory where the data will be stored
 
 input_rivers = "Maumee" ## This should include a list of any rivers being tested in this run
 ```
 
 Create input and output folders for each river
+
+### Note: include all input files in one folder (input_directory) to be included in list (input_files) so that create_folders can create all the necessary folders and will copy over the necessary .csv files to set up the rbeale run.
 ```{r}
 create_folders(parent_directory, input_rivers, variables = "ALL", input_directory = getwd(), input_files = "Maumee.csv")
 ```
