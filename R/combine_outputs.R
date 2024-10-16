@@ -86,7 +86,7 @@ combine_outputs <- function(parent_directory, rivers, variables = c("TSS", "TP",
 
   # Optionally combine all data into a master Excel file
   if (combine_as_excel && length(combined_data_list) > 0) {
-    master_excel_path <- file.path(parent_directory, "combined_rivers_data.xlsx")
+    master_excel_path <- file.path(parent_directory, "combined_rbeale_river_output.xlsx")
     wb <- openxlsx::createWorkbook()
 
     # Add each river and timeframe combination as its own sheet
