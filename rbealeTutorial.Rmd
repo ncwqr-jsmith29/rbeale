@@ -52,3 +52,10 @@ daily(parent_directory, input_rivers)
 ```
 
 rbeale will create outputs for each river, timeframe, and analyte as seen in the folders.
+
+To combine outputs into a single file for each river, use the following code.
+
+This code will create an output file for each river and each timeframe within that river's Output folder as well as a master copy in an excel format within the parent_directory folder. In order to ignore the master copy, set the argument 'combine_as_excel' to FALSE.
+```{r}
+combine_outputs(parent_directory, input_rivers)
+```
